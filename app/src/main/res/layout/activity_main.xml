@@ -57,5 +57,22 @@
             app:layout_constraintStart_toStartOf="@+id/btn_takePicture1"
             app:layout_constraintTop_toBottomOf="@+id/btn_takePicture2" />
 
+        <Button
+            android:id="@+id/btn_takeVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="使用相机应用拍摄视频"
+            app:layout_constraintEnd_toEndOf="@+id/btn_takePicture1"
+            app:layout_constraintStart_toStartOf="@+id/btn_takePicture1"
+            app:layout_constraintTop_toBottomOf="@+id/iv_complete" />
+        <VideoView
+            android:id="@+id/vv_video"
+            android:layout_width="wrap_content"
+            android:layout_height="200dp"
+            app:layout_constraintEnd_toEndOf="@+id/btn_takePicture1"
+            app:layout_constraintStart_toStartOf="@+id/btn_takePicture1"
+            app:layout_constraintTop_toBottomOf="@+id/btn_takeVideo" />
+
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
