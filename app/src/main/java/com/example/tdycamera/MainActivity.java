@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
+    private String TAG = getClass().getSimpleName();
     private static final int PERMISSION_REQUEST_CAMERA = 0;
     private static final int REQ_1 = 1;
     private static final int REQ_2 = 2;
@@ -101,12 +102,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             ivThumbnail.setImageBitmap(imageBitmap);
         }
+        //获得完整图片
         if (requestCode == REQ_2) {
             FileInputStream fis = null;
             try {
                 fis = new FileInputStream(currentPhotoPath);
                 Bitmap bitmap = BitmapFactory.decodeStream(fis);
                 ivComplete.setImageBitmap(bitmap);
+//                setPic();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } finally {
@@ -120,12 +123,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
-
     private File createImageFile() throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);//私密
         File image = File.createTempFile(
                 imageFileName,  /* 前缀 */
                 ".jpg",         /* 后缀 */
@@ -134,7 +135,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         currentPhotoPath = image.getAbsolutePath();
         return image;
     }
+    //对调整后的图片进行解码
+    private void setPic() {
 
+        int targetW = ivComplete.getWidth();
+        int targetH = ivComplete.getHeight();
+
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        //确定要缩小图像的比例
+        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+
+        // 将图像文件解码为位图大小以填充视图
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(currentPhotoPath, bmOptions);
+        ivComplete.setImageBitmap(bitmap);
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
