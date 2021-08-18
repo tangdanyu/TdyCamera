@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private Button btnTakePicture2;
     private Button btnTakeVideo;
     private String currentPhotoPath;//拍摄照片路径
-    private String currentVideoPath;//录像存储路径
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -153,7 +152,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
             Uri videoUri = data.getData();
             vvVideo.setMediaController(new MediaController(this));
             vvVideo.setVideoURI(videoUri);
-//            vvVideo.setVideoPath(currentVideoPath);
             vvVideo.start();
         }
     }
@@ -172,15 +170,14 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     }
     private File createVideoFile() throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "Video_" + timeStamp + "_";
+        String videoFileName = "Video_" + timeStamp + "_";
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);//需要在file_paths.xml中配置Movies
-        File image = File.createTempFile(
-                imageFileName,  /* 前缀 */
+        File video = File.createTempFile(
+                videoFileName,  /* 前缀 */
                 ".mp4",         /* 后缀 */
                 storageDir      /* 目录 */
         );
-        currentVideoPath = image.getAbsolutePath();
-        return image;
+        return video;
     }
     //对调整后的图片进行解码
     private void setPic() {
