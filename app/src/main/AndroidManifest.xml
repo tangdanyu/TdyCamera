@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.tdycamera">
-
-<!--    请求相机功能-->
-    <uses-feature android:name="android.hardware.camera" android:required="true" />
-<!--    请求写入权限-->
+    <!-- 请求相机功能 -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" /> <!-- 请求写入权限 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
@@ -14,7 +15,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TdyCamera">
-        <activity android:name=".CameraPreviewActivity"></activity>
+        <activity
+            android:name=".phonecamera.PhoneCameraActivity"
+            android:exported="true" />
+        <!--            设置全屏没有标题栏-->
+        <activity android:name=".demo.CameraActivity"/>
+<!--            android:theme="@style/Theme.AppCompat.NoActionBar"-->
+<!--           />-->
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,9 +39,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
     </application>
-
-
 
 </manifest>

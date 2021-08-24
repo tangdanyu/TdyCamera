@@ -11,67 +11,22 @@
 
 
         <Button
-            android:id="@+id/btn_takePicture1"
+            android:id="@+id/btn_phoneCamera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="使用相机应用拍照获得缩略图"
+            android:text="使用已有相机应用"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-
-        <TextView
-            android:id="@+id/tv_thumbnail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="缩略图"
-            app:layout_constraintEnd_toEndOf="@+id/btn_takePicture1"
-            app:layout_constraintStart_toStartOf="@+id/btn_takePicture1"
-            app:layout_constraintTop_toBottomOf="@+id/btn_takePicture1" />
-
-        <ImageView
-            android:id="@+id/iv_thumbnail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_launcher_background"
-            app:layout_constraintEnd_toEndOf="@+id/btn_takePicture1"
-            app:layout_constraintStart_toStartOf="@+id/btn_takePicture1"
-            app:layout_constraintTop_toBottomOf="@+id/btn_takePicture1" />
-
         <Button
-            android:id="@+id/btn_takePicture2"
+            android:id="@+id/btn_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="使用相机应用拍照获得完整图片"
-            app:layout_constraintEnd_toEndOf="@+id/btn_takePicture1"
-            app:layout_constraintStart_toStartOf="@+id/btn_takePicture1"
-            app:layout_constraintTop_toBottomOf="@+id/iv_thumbnail" />
-
-        <ImageView
-            android:id="@+id/iv_complete"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:src="@drawable/ic_launcher_background"
-            app:layout_constraintEnd_toEndOf="@+id/btn_takePicture1"
-            app:layout_constraintStart_toStartOf="@+id/btn_takePicture1"
-            app:layout_constraintTop_toBottomOf="@+id/btn_takePicture2" />
-
-        <Button
-            android:id="@+id/btn_takeVideo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="使用相机应用拍摄视频"
-            app:layout_constraintEnd_toEndOf="@+id/btn_takePicture1"
-            app:layout_constraintStart_toStartOf="@+id/btn_takePicture1"
-            app:layout_constraintTop_toBottomOf="@+id/iv_complete" />
-        <VideoView
-            android:id="@+id/vv_video"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            app:layout_constraintEnd_toEndOf="@+id/btn_takePicture1"
-            app:layout_constraintStart_toStartOf="@+id/btn_takePicture1"
-            app:layout_constraintTop_toBottomOf="@+id/btn_takeVideo" />
+            android:text="自定义相机应用"
+            app:layout_constraintEnd_toEndOf="@+id/btn_phoneCamera"
+            app:layout_constraintStart_toStartOf="@+id/btn_phoneCamera"
+            app:layout_constraintTop_toBottomOf="@+id/btn_phoneCamera" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

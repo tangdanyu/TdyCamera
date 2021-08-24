@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (C) 2016 The Android Open Source Project
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+         http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<resources>
+    <declare-styleable name="CameraView">
+        <!--
+         如果希望摄影机视图调整其边界以保留其摄影机预览的纵横比，请将此设置为true
+        -->
+        <attr name="android:adjustViewBounds"/>
+        <!-- 相机相对于设备屏幕的方向. -->
+        <attr name="facing" format="enum">
+            <!-- 相机设备与设备屏幕的方向相反. -->
+            <enum name="back" value="0"/>
+            <!-- 相机设备与设备屏幕的方向相同。 -->
+            <enum name="front" value="1"/>
+        </attr>
+        <!-- 相机预览和图片的纵横比。 -->
+        <attr name="aspectRatio" format="string"/>
+        <!-- 连续自动对焦模式. -->
+        <attr name="autoFocus" format="boolean"/>
+        <!-- 闪光模式. -->
+        <attr name="flash" format="enum">
+            <!-- 闪光灯不会被触发. -->
+            <enum name="off" value="0"/>
+            <!--
+             快照期间始终会触发闪光灯。根据驱动程序的不同，预览或自动对焦期间也会触发闪存。
+            -->
+            <enum name="on" value="1"/>
+            <!--
+             在预览、自动对焦和快照期间不断发光。这也可用于视频录制。
+            -->
+            <enum name="torch" value="2"/>
+            <!--
+              闪光灯将在需要时自动启动。闪光灯可能在预览、自动对焦或快照期间触发，具体取决于驱动程序。
+            -->
+            <enum name="auto" value="3"/>
+            <!--
+             闪光灯将在红眼减少模式下发射。
+            -->
+            <enum name="redEye" value="4"/>
+        </attr>
+    </declare-styleable>
+</resources>
