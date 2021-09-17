@@ -9,5 +9,10 @@
         <item name="autoFocus">true</item>
         <item name="flash">auto</item>
     </style>
+    <style name="fullScreen" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. #2196F3-->
+        <item name="android:windowFullscreen">true</item>
+        <item name="windowNoTitle">true</item>
+    </style>
 
 </resources>

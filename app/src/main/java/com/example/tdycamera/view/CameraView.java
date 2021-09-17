@@ -17,6 +17,8 @@ import androidx.core.view.ViewCompat;
 
 import com.example.tdycamera.R;
 import com.example.tdycamera.api.Camera1;
+import com.example.tdycamera.api.Camera2;
+import com.example.tdycamera.api.Camera2Api23;
 import com.example.tdycamera.api.SurfaceViewPreview;
 import com.example.tdycamera.api.TextureViewPreview;
 import com.example.tdycamera.base.AspectRatio;
@@ -92,14 +94,13 @@ public class CameraView extends FrameLayout {
         //预览控件抽象类
         final PreviewImpl preview = createPreviewImpl(context);
         mCallbacks = new CallbackBridge();
-        mImpl = new Camera1(mCallbacks, preview);
-//        if (Build.VERSION.SDK_INT < 21) {
-//            mImpl = new Camera1(mCallbacks, preview);
-//        } else if (Build.VERSION.SDK_INT < 23) {
-//            mImpl = new Camera2(mCallbacks, preview, context);
-//        } else {
-//            mImpl = new Camera2Api23(mCallbacks, preview, context);
-//        }
+        if (Build.VERSION.SDK_INT < 21) {
+            mImpl = new Camera1(mCallbacks, preview);
+        } else if (Build.VERSION.SDK_INT < 23) {
+            mImpl = new Camera2(mCallbacks, preview, context);
+        } else {
+            mImpl = new Camera2Api23(mCallbacks, preview, context);
+        }
         // 读取设置的默认属性
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraView, defStyleAttr,
                 R.style.Widget_CameraView);

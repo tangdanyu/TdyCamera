@@ -14,7 +14,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.tdycamera.demo.CameraActivity;
+import com.example.tdycamera.apicamera.CameraApiActivity;
+import com.example.tdycamera.mycamera.camera1.Camera1Activity;
+import com.example.tdycamera.mycamera.camera2.AutoCamera2Activity;
+import com.example.tdycamera.mycamera.camera2.Camera2Activity;
+import com.example.tdycamera.mycamera.camera2.video.Camera2VideoActivity;
 import com.example.tdycamera.phonecamera.PhoneCameraActivity;
 
 import java.util.ArrayList;
@@ -24,11 +28,17 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private String TAG = getClass().getSimpleName();
 
     private Button btnPhoneCamera;
-    private Button btnCamera;
+    private Button btnCameraApi;
+    private Button btnCamera1;
+    private Button btnCamera2;
+    private Button btnCamera2Auto;
+    private Button btnCamera2Video;
+    private Button btnCamera2Basic;
+
 
     private int REQUEST_CAMERA_PERMISSION = 100;
     private String[] PERMISSIONS = {Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.CAMERA};
+            Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.CAMERA,Manifest.permission.RECORD_AUDIO};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,11 +50,21 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     }
     private void initView(){
         btnPhoneCamera = findViewById(R.id.btn_phoneCamera);
-        btnCamera = findViewById(R.id.btn_camera);
+        btnCameraApi = findViewById(R.id.btn_camera_api);
+        btnCamera1 = findViewById(R.id.btn_camera1);
+        btnCamera2 = findViewById(R.id.btn_camera2);
+        btnCamera2Video = findViewById(R.id.btn_camera2_video);
+        btnCamera2Auto = findViewById(R.id.btn_camera2_auto);
+        btnCamera2Basic = findViewById(R.id.btn_camera2_basic);
     }
     private void initListener(){
         btnPhoneCamera.setOnClickListener(this);
-        btnCamera.setOnClickListener(this);
+        btnCameraApi.setOnClickListener(this);
+        btnCamera1.setOnClickListener(this);
+        btnCamera2.setOnClickListener(this);
+        btnCamera2Video.setOnClickListener(this);
+        btnCamera2Auto.setOnClickListener(this);
+        btnCamera2Basic.setOnClickListener(this);
     }
 
     @Override
@@ -53,9 +73,23 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
             case R.id.btn_phoneCamera:
                 startActivity(new Intent(this, PhoneCameraActivity.class));
                 break;
-            case R.id.btn_camera:
-
-                startActivity(new Intent(this, CameraActivity.class));
+            case R.id.btn_camera_api:
+                startActivity(new Intent(this, CameraApiActivity.class));
+                break;
+            case R.id.btn_camera1:
+                startActivity(new Intent(this, Camera1Activity.class));
+                break;
+            case R.id.btn_camera2:
+                startActivity(new Intent(this, Camera2Activity.class));
+                break;
+            case R.id.btn_camera2_video:
+                startActivity(new Intent(this, Camera2VideoActivity.class));
+                break;
+            case R.id.btn_camera2_auto:
+                startActivity(new Intent(this, AutoCamera2Activity.class));
+                break;
+            case R.id.btn_camera2_basic:
+                startActivity(new Intent(this, AutoCamera2Activity.class));
                 break;
         }
     }

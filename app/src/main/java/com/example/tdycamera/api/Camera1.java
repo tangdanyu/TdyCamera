@@ -67,7 +67,7 @@ public class Camera1 extends CameraViewImpl {
     //宽高比
     private AspectRatio mAspectRatio;
 
-    //是否可以预览
+    //是否正在预览
     private boolean mShowingPreview;
 
     //是否自动对焦
@@ -110,6 +110,7 @@ public class Camera1 extends CameraViewImpl {
     @Override
     public void stop() {
         if (mCamera != null) {
+            mCamera.setPreviewCallback(null);
             mCamera.stopPreview();
         }
         mShowingPreview = false;
@@ -378,6 +379,8 @@ public class Camera1 extends CameraViewImpl {
 
     private void releaseCamera() {
         if (mCamera != null) {
+            mCamera.setPreviewCallback(null);
+            mCamera.stopPreview();
             mCamera.release();
             mCamera = null;
             mCallback.onCameraClosed();
@@ -1166,9 +1169,9 @@ public class Camera1 extends CameraViewImpl {
 
     public void onOrientationChanged(int orientation) {
         if (orientation == ORIENTATION_UNKNOWN) return;
-        android.hardware.Camera.CameraInfo info =
-                new android.hardware.Camera.CameraInfo();
-        android.hardware.Camera.getCameraInfo(mCameraId, info);
+        Camera.CameraInfo info =
+                new Camera.CameraInfo();
+        Camera.getCameraInfo(mCameraId, info);
         orientation = (orientation + 45) / 90 * 90;
         int rotation = 0;
         if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {

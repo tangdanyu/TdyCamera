@@ -63,12 +63,12 @@ public class Camera2 extends CameraViewImpl {
     }
 
     /**
-     * Max preview width that is guaranteed by Camera2 API
+     * Camera2 API保证的最大预览宽度
      */
     private static final int MAX_PREVIEW_WIDTH = 1920;
 
     /**
-     * Max preview height that is guaranteed by Camera2 API
+     * Camera2 API保证的最大预览高度
      */
     private static final int MAX_PREVIEW_HEIGHT = 1080;
 
@@ -102,8 +102,7 @@ public class Camera2 extends CameraViewImpl {
 
     };
 
-    private final CameraCaptureSession.StateCallback mSessionCallback
-            = new CameraCaptureSession.StateCallback() {
+    private final CameraCaptureSession.StateCallback mSessionCallback = new CameraCaptureSession.StateCallback() {
 
         @Override
         public void onConfigured(@NonNull CameraCaptureSession session) {

@@ -9,10 +9,15 @@
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.3140625" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/drawable-v24/ic_switch_camera.xml" value="0.38229166666666664" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/drawable/ic_launcher_background.xml" value="0.38229166666666664" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_auto_camera2.xml" value="0.1" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera.xml" value="0.13994565217391305" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera1.xml" value="0.22" />
-        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_main.xml" value="0.296195652173913" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera2.xml" value="0.16" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera2_basic.xml" value="0.16614583333333333" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera2_video.xml" value="0.1515625" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_main.xml" value="0.2" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_phone_camera.xml" value="0.22864583333333333" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/fragment_camera2_basic.xml" value="0.196875" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/surface_view.xml" value="0.20520833333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/texture_view.xml" value="0.20520833333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/menu/main.xml" value="0.20520833333333333" />

@@ -7,6 +7,7 @@
         android:required="true" /> <!-- 请求写入权限 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:allowBackup="true"
@@ -16,12 +17,35 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TdyCamera">
         <activity
+            android:name=".mycamera.camera1.Camera1Activity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/fullScreen" />
+        <activity
+            android:name=".mycamera.camera2.video.Camera2VideoActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/fullScreen" />
+        <activity
+            android:name=".mycamera.camera2.basic.Camera2BasicActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/fullScreen" />
+        <activity
+            android:name=".mycamera.camera2.AutoCamera2Activity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/fullScreen" />
+        <activity
+            android:name=".mycamera.camera2.Camera2Activity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/fullScreen" />
+        <activity
             android:name=".phonecamera.PhoneCameraActivity"
-            android:exported="true" />
-        <!--            设置全屏没有标题栏-->
-        <activity android:name=".demo.CameraActivity"/>
-<!--            android:theme="@style/Theme.AppCompat.NoActionBar"-->
-<!--           />-->
+            android:exported="true" /> <!-- 设置全屏没有标题栏 -->
+        <activity android:name=".apicamera.CameraApiActivity" /> <!-- android:theme="@style/Theme.AppCompat.NoActionBar" -->
+        <!-- /> -->
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

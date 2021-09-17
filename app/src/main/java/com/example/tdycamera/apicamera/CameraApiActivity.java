@@ -1,4 +1,4 @@
-package com.example.tdycamera.demo;
+package com.example.tdycamera.apicamera;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -9,8 +9,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 
 import com.example.tdycamera.R;
+
 import com.example.tdycamera.base.AspectRatio;
 import com.example.tdycamera.view.AspectRatioFragment;
 import com.example.tdycamera.view.CameraView;
@@ -33,7 +32,7 @@ import java.util.Set;
 /**
  * 此演示应用程序将拍摄的照片保存到一个固定文件中。
  */
-public class CameraActivity extends AppCompatActivity implements
+public class CameraApiActivity extends AppCompatActivity implements
         AspectRatioFragment.Listener, View.OnClickListener {
 
     private String TAG = getClass().getSimpleName();
@@ -69,7 +68,7 @@ public class CameraActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_camera1);
+        setContentView(R.layout.activity_camera_api);
 
         mCameraView = findViewById(R.id.camera);
         fabTakePicture = findViewById(R.id.take_picture);
