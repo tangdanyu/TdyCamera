@@ -3,6 +3,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
+import com.example.tdycamera.utils.ImageUtil;
 import com.example.tdycamera.utils.MyLogUtil;
 import android.media.MediaRecorder;
 import java.io.File;
@@ -52,6 +53,8 @@ public class Camera2Helper {
     private Context mContext;
     private String mCameraId;                    //正在使用的相机id
     private AutoFitTextureView mTextureView;  // 预览使用的自定义TextureView控件
+    private boolean isFrontCamera = true;               //是否前置摄像头
+    private int mOrientation;//获取相机角度
 
     private CameraCaptureSession mCaptureSession;// 预览用的获取会话
     private CameraDevice mCameraDevice;          // 正在使用的相机
@@ -62,6 +65,7 @@ public class Camera2Helper {
     private HandlerThread mBackgroundThread;     // 处理拍照等工作的子线程
     private Handler mBackgroundHandler;          // 上面定义的子线程的处理器
     private ImageReader mImageReader;            // 用于获取画面的数据，并进行识别 YUV_420_888
+    private int imageFormat = ImageFormat.YUV_420_888;
 
     private CaptureRequest.Builder mPreviewRequestBuilder;  // 预览请求构建器
     private CaptureRequest mPreviewRequest;      // 预览请求, 由上面的构建器构建出来
@@ -134,6 +138,36 @@ public class Camera2Helper {
         }
     };
 
+    /**
+     * ImageReader的回调函数
+     */
+    private final ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
+        @Override
+        public void onImageAvailable(ImageReader reader) {
+            //我们可以将这帧数据转成字节数组，类似于Camera1的PreviewCallback回调的预览帧数据
+            Image image = reader.acquireLatestImage();
+            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+            byte[] data = new byte[buffer.remaining()];
+            buffer.get(data);
+            if(image == null){
+                return;
+            }
+            byte[] nv21 = ImageUtil.getDataFromImage(image,2);
+//            MyLogUtil.e(TAG,"转码耗时"+(System.currentTimeMillis() - before));
+            mBackgroundHandler.post(new Runnable() {    // 在子线程执行，防止预览界面卡顿
+                @Override
+                public void run() {
+
+                    mCameraListener.onCameraPreview(nv21,mPreviewSize.getWidth(),mPreviewSize.getHeight(),mOrientation);
+                }
+            });
+            image.close(); // 这里一定要close，不然预览会卡死
+        }
+    };
+
+    public boolean isFrontCamera(){
+        return isFrontCamera;
+    }
     public void onResume() {
          MyLogUtil.e(TAG, "onResume: ");
         startBackgroundThread();
@@ -152,6 +186,7 @@ public class Camera2Helper {
         closeCamera();
         stopBackgroundThread();
     }
+
     public void onDestroy() {
 
     }
@@ -286,8 +321,9 @@ public class Camera2Helper {
                 else {
                     mPreviewSize = new Size(selectPreviewSize.getHeight(), selectPreviewSize.getWidth());
                 }
+                mOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
                 if (mCameraListener != null) {
-                    mCameraListener.onCameraOpened(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+                    mCameraListener.onCameraOpened(mPreviewSize.getWidth(), mPreviewSize.getHeight(),mOrientation);
                 }
                  MyLogUtil.e(TAG, "mPreviewSize.getWidth: " + mPreviewSize.getWidth());  // 1920
                  MyLogUtil.e(TAG, "mPreviewSize.getHeight: " + mPreviewSize.getHeight());  // 1080
@@ -359,7 +395,7 @@ public class Camera2Helper {
         try {
             // 输入相机的尺寸必须是相机支持的尺寸，这样画面才能不失真，TextureView输入相机的尺寸也是这个
             mImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(),
-                    ImageFormat.YUV_420_888, /*maxImages*/5);
+                    imageFormat, /*maxImages*/1);
             mImageReader.setOnImageAvailableListener(   // 设置监听和后台线程处理器
                     mOnImageAvailableListener, mBackgroundHandler);
             // 获取用来预览的texture实例
@@ -436,7 +472,7 @@ public class Camera2Helper {
         }
         // 输入相机的尺寸必须是相机支持的尺寸，这样画面才能不失真，TextureView输入相机的尺寸也是这个
         mImageReader = ImageReader.newInstance(selectPreviewSize.getWidth(), selectPreviewSize.getHeight(),
-                ImageFormat.YUV_420_888, /*maxImages*/1);
+                imageFormat, /*maxImages*/1);
         mImageReader.setOnImageAvailableListener(   // 设置监听和后台线程处理器
                 mOnImageAvailableListener, mBackgroundHandler);
         setMediaRecorderConfig(selectPreviewSize.getWidth(), selectPreviewSize.getHeight());
@@ -557,32 +593,14 @@ public class Camera2Helper {
         }
     }
 
-    /**
-     * ImageReader的回调函数
-     */
-    private final ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
-        @Override
-        public void onImageAvailable(ImageReader reader) {
-            //我们可以将这帧数据转成字节数组，类似于Camera1的PreviewCallback回调的预览帧数据
-            Image image = reader.acquireLatestImage();
-            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-            byte[] data = new byte[buffer.remaining()];
-            buffer.get(data);
-            mBackgroundHandler.post(new Runnable() {    // 在子线程执行，防止预览界面卡顿
-                @Override
-                public void run() {
-                    mCameraListener.onCameraPreview(data,mPreviewSize.getWidth(),mPreviewSize.getHeight(),270);
-                    image.close();   // 这里一定要close，不然预览会卡死
-                }
-            });
-        }
-    };
+
     /**
      * 初始化MediaRecorder
      */
     private void initMediaRecorder(){
         mMediaRecorder = new MediaRecorder();
     }
+
     public void setMediaRecorderConfig(int width, int height) {
         File file = new File(mContext.getExternalCacheDir(),"demo.mp4");
         if (file.exists()){

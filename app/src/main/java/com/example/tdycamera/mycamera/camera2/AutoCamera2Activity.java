@@ -733,7 +733,7 @@ public class AutoCamera2Activity extends AppCompatActivity {
 
         cameraListener = new CameraListener() {
             @Override
-            public void onCameraOpened(int width, int height) {
+            public void onCameraOpened(int width, int height,int displayOrientation) {
                 // 设置画框用的surfaceView的展示尺寸，也是TextureView的展示尺寸（因为是竖屏，所以宽度比高度小）
 //                surfaceHolder.setFixedSize(width,height);
 //                mPreviewSize = new Size(width,height);

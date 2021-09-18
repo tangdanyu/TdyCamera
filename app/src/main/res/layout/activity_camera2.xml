@@ -8,10 +8,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
     <SurfaceView
-        android:id="@+id/surface_view"
+        android:id="@+id/surface_view_draw"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
+        />
+    <ImageView
+        android:id="@+id/preview_iv"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@mipmap/ic_launcher"
         />
 
     <Button
@@ -20,7 +25,6 @@
         android:layout_height="wrap_content"
         android:text="开始"
         android:layout_gravity="bottom|left"
-
         android:visibility="gone"/>
 
     <Button
@@ -29,8 +33,54 @@
         android:layout_height="wrap_content"
         android:text="结束"
         android:layout_gravity="bottom|right"
-
         android:visibility="gone"/>
+
+    <RelativeLayout
+        android:id="@+id/componentLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom">
+        <Switch
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:id="@+id/swPointOrder"
+            android:textOn="点序"
+            android:textOff="点序"
+            android:textColor="#000000"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18dp"
+            android:text="点序" />
+        <TextView
+            android:id="@+id/costTime"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_below="@+id/swPointOrder"
+            android:textSize="22dp"
+            android:text="0 ms"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/faceAction"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_below="@+id/swPointOrder"
+            android:textSize="22dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/ypr"
+            android:textSize="22dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
 
 </FrameLayout>
 

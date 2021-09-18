@@ -2,11 +2,13 @@ package com.example.tdycamera.mnn;
 
 import android.content.Context;
 
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.alibaba.android.mnnkit.actor.FaceDetector;
+import com.alibaba.android.mnnkit.entity.FaceDetectConfig;
 import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
 import com.alibaba.android.mnnkit.entity.MNNCVImageFormat;
 import com.alibaba.android.mnnkit.entity.MNNFlipType;
@@ -40,12 +42,33 @@ public class MNNFaceDetectorAdapter {
     }
 
     @NonNull
+    public  FaceDetectionReport[] getFace(Bitmap bitmap, int inAngle, int outAngle, boolean isFrontCamera) {
+        if (null ==bitmap  || null == mFaceDetector) {
+            return null;
+        }
+        FaceDetectionReport[] results = null;
+        long detectConfig =0;//关于眨眼张嘴等配置
+        MNNFlipType outputFlip = isFrontCamera?MNNFlipType.FLIP_Y:MNNFlipType.FLIP_NONE;//是否翻转
+        results = mFaceDetector.inference(bitmap, detectConfig, inAngle, outAngle,outputFlip);
+        if (results!=null && results.length>0) {
+            return results;
+        }else {
+            if (mnnFaceDetectListener != null) {
+                mnnFaceDetectListener.onNoFaceDetected();
+            }
+        }
+        return null;
+    }
+
+    @NonNull
     public  FaceDetectionReport[] getFace(byte[] bytebuffer, int width, int height,int imageFormat,int inAngle,int outAngle,boolean isFrontCamera) {
         if (null ==bytebuffer  || null == mFaceDetector) {
             return null;
         }
         FaceDetectionReport[] results = null;
-        long detectConfig =0;//关于眨眼张嘴等配置
+        //关于眨眼张嘴等配置
+//        long detectConfig =0;不配置
+        long detectConfig = FaceDetectConfig.ACTIONTYPE_EYE_BLINK| FaceDetectConfig.ACTIONTYPE_MOUTH_AH|FaceDetectConfig.ACTIONTYPE_HEAD_YAW|FaceDetectConfig.ACTIONTYPE_HEAD_PITCH|FaceDetectConfig.ACTIONTYPE_BROW_JUMP;
         MNNFlipType outputFlip = isFrontCamera?MNNFlipType.FLIP_Y:MNNFlipType.FLIP_NONE;//是否翻转
         if(imageFormat == 1){
              results = mFaceDetector.inference(bytebuffer, width, height,

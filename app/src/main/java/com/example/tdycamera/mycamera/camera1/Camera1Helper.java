@@ -233,7 +233,7 @@ public class Camera1Helper implements Camera.PreviewCallback {
             surfaceWidth = closelySize.width;
             MyLogUtil.e(TAG, "预览尺寸修改为：" + closelySize.width + "*" + closelySize.height);
             if (cameraListener != null) {
-                cameraListener.onCameraOpened(closelySize.width,closelySize.height );
+                cameraListener.onCameraOpened(closelySize.width,closelySize.height, calcCameraRotation(mDisplayOrientation));
             }
             previewSize = closelySize;
             mCameraParameters.setPreviewSize(closelySize.width,closelySize.height);
