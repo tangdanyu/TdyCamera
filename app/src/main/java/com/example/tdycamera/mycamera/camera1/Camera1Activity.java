@@ -17,6 +17,7 @@ import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mnn.MNNDrawUtil;
 import com.example.tdycamera.mnn.MNNFaceDetectListener;
 import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
+import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
 import com.example.tdycamera.utils.ImageUtil;
 
 public class Camera1Activity extends AppCompatActivity {
@@ -27,6 +28,7 @@ public class Camera1Activity extends AppCompatActivity {
     private MNNFaceDetectorAdapter mnnFaceDetectorAdapter;  //阿里人脸识别工具类
     private MNNFaceDetectListener mnnFaceDetectListener;    //阿里人脸识别
     private MNNDrawUtil mnnDrawUtil;//特征点的绘制
+    private Activity activity;
 
     //相机控制
     private Camera1Helper camera1Helper;
@@ -34,8 +36,9 @@ public class Camera1Activity extends AppCompatActivity {
     private CameraListener cameraListener;
     //相机预览控件
     private SurfaceView surfaceView;
+    private AutoFitTextureView autoFitTextureView;
     private ImageView previewIv;
-    private Activity activity;
+
     private long lastTime = System.currentTimeMillis();
 
     @Override
@@ -52,6 +55,7 @@ public class Camera1Activity extends AppCompatActivity {
     }
 
     private void initView() {
+        autoFitTextureView = findViewById(R.id.texture_view);
         surfaceView = findViewById(R.id.surface_view);
         previewIv = findViewById(R.id.preview_iv);
 
@@ -143,7 +147,7 @@ public class Camera1Activity extends AppCompatActivity {
     }
 
     private void initData() {
-        camera1Helper = new Camera1Helper(this, cameraListener, surfaceView);
+        camera1Helper = new Camera1Helper(this, cameraListener, autoFitTextureView);
         mnnFaceDetectorAdapter = new MNNFaceDetectorAdapter(this, mnnFaceDetectListener);
     }
 

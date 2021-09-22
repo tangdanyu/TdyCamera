@@ -2,23 +2,26 @@ package com.example.tdycamera.mycamera.camera1;
 
 import android.content.Context;
 import android.graphics.ImageFormat;
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.TextureView;
+import android.view.View;
 
 import com.example.tdycamera.listener.CameraListener;
+import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
 import com.example.tdycamera.utils.MyLogUtil;
 
 import java.io.IOException;
 import java.util.List;
 
 
-
 /**
  * 相机辅助类，和{@link CameraListener}共同使用，获取nv21数据等操作
  */
 public class Camera1Helper implements Camera.PreviewCallback {
-    private  String TAG = "CameraHelper";
+    private String TAG = "CameraHelper";
     private static final int INVALID_CAMERA_ID = -1;
     //相机id
     private int mCameraId;
@@ -28,8 +31,10 @@ public class Camera1Helper implements Camera.PreviewCallback {
     private boolean mShowingPreview;
     //是否自动对焦
     private boolean mAutoFocus;
-    //预览控件
-    private SurfaceView surfaceView;
+    // 预览显示的view，目前仅支持surfaceView和textureView
+    private View previewDisplayView;
+    // 是否镜像显示，只支持textureView
+    private boolean isMirror = false;
     //预览宽高
     private int surfaceWidth, surfaceHeight;
     //显示方向
@@ -47,6 +52,41 @@ public class Camera1Helper implements Camera.PreviewCallback {
     private CameraListener cameraListener;
     //上下文
     private Context context;
+    // 预览控件TextureView与相机关联
+    /**
+     * SurfaceTexture监听器
+     */
+    private final TextureView.SurfaceTextureListener mSurfaceTextureListener
+            = new TextureView.SurfaceTextureListener() {
+
+        @Override
+        public void onSurfaceTextureAvailable(SurfaceTexture texture, int width, int height) {
+            MyLogUtil.e(TAG, "onSurfaceTextureAvailable: width=" + width + ", height=" + height);//1080 2160
+//            openCamera();    // SurfaceTexture就绪后回调执行打开相机操作
+            if (mCamera != null) {
+                surfaceWidth = height;
+                surfaceHeight = width;
+                MyLogUtil.e(TAG, "surfaceChanged surfaceWidth" + surfaceWidth + " surfaceHeight" + surfaceHeight);
+                setPreview();
+                adjustCameraParameters();
+            }
+        }
+
+        @Override
+        public void onSurfaceTextureSizeChanged(SurfaceTexture texture, int width, int height) {
+
+        }
+
+        @Override
+        public boolean onSurfaceTextureDestroyed(SurfaceTexture texture) {
+            return true;
+        }
+
+        @Override
+        public void onSurfaceTextureUpdated(SurfaceTexture texture) {
+        }
+    };
+
     // 预览控件与相机关联
     private SurfaceHolder.Callback surfaceCallback = new SurfaceHolder.Callback() {
         @Override
@@ -73,16 +113,32 @@ public class Camera1Helper implements Camera.PreviewCallback {
 
 
     // 参数设置
-    public Camera1Helper(Context context, CameraListener cameraListener, SurfaceView surfaceView) {
+    public Camera1Helper(Context context, CameraListener cameraListener, View previewDisplayView) {
         this.context = context;
         this.cameraListener = cameraListener;
-        this.surfaceView = surfaceView;
-        surfaceView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        surfaceView.getHolder().addCallback(surfaceCallback);
+        this.previewDisplayView = previewDisplayView;
+        init();
+
+    }
+
+    // 初始化相机
+    public void init() {
+        //预览 预览需要实现 android.view.SurfaceHolder.Callback 接口，该接口用于将图片数据从相机硬件传递到相机应用。
+        if (previewDisplayView instanceof TextureView) {
+            ((TextureView) this.previewDisplayView).setSurfaceTextureListener(mSurfaceTextureListener);
+        } else if (previewDisplayView instanceof SurfaceView) {
+            ((SurfaceView) previewDisplayView).getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+            ((SurfaceView) previewDisplayView).getHolder().addCallback(surfaceCallback);
+        }
+
+        if (isMirror) {
+            previewDisplayView.setScaleX(-1);
+        }
     }
 
     //打开 Camera 对象 打开相机的操作可以推迟到 onResume() 方法，这样便于重用代码并尽可能简化控制流程。
     private void start() {
+        MyLogUtil.e(TAG,"start");
         synchronized (this) {
             if (mCamera != null) {
                 return;
@@ -115,7 +171,11 @@ public class Camera1Helper implements Camera.PreviewCallback {
     //设置预览控件
     private void setPreview() {
         try {
-            mCamera.setPreviewDisplay(surfaceView.getHolder());
+            if (previewDisplayView instanceof TextureView) {
+                mCamera.setPreviewTexture(((TextureView) previewDisplayView).getSurfaceTexture());
+            } else {
+                mCamera.setPreviewDisplay(((SurfaceView) previewDisplayView).getHolder());
+            }
             mCamera.setPreviewCallback(this);
         } catch (IOException e) {
             e.printStackTrace();
@@ -193,7 +253,7 @@ public class Camera1Helper implements Camera.PreviewCallback {
     }
 
     public boolean isReady() {
-        return surfaceView.getWidth() != 0 && surfaceView.getHeight() != 0;
+        return previewDisplayView.getWidth() != 0 && previewDisplayView.getHeight() != 0;
     }
 
     //修改相机的预览尺寸
@@ -233,10 +293,13 @@ public class Camera1Helper implements Camera.PreviewCallback {
             surfaceWidth = closelySize.width;
             MyLogUtil.e(TAG, "预览尺寸修改为：" + closelySize.width + "*" + closelySize.height);
             if (cameraListener != null) {
-                cameraListener.onCameraOpened(closelySize.width,closelySize.height, calcCameraRotation(mDisplayOrientation));
+                cameraListener.onCameraOpened(closelySize.width, closelySize.height, calcCameraRotation(mDisplayOrientation));
             }
             previewSize = closelySize;
-            mCameraParameters.setPreviewSize(closelySize.width,closelySize.height);
+            if (previewDisplayView instanceof TextureView) {
+                ((AutoFitTextureView) previewDisplayView).setAspectRatio(previewSize.height, previewSize.width);
+            }
+            mCameraParameters.setPreviewSize(closelySize.width, closelySize.height);
         }
     }
 

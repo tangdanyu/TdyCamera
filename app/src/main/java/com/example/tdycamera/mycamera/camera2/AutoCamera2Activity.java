@@ -59,7 +59,7 @@ import java.util.concurrent.TimeUnit;
 
 public class AutoCamera2Activity extends AppCompatActivity {
 
-    private static final String TAG = "Camera2BasicFragment";
+    private static final String TAG = "AutoCamera2Activity";
     private static final int REQUEST_CAMERA_PERMISSION = 1;
 
     // Camera2 API提供的最大预览宽度和高度
