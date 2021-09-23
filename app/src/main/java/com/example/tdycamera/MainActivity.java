@@ -15,25 +15,13 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.tdycamera.apicamera.CameraApiActivity;
-import com.example.tdycamera.mycamera.camera1.Camera1Activity;
-import com.example.tdycamera.mycamera.camera2.AutoCamera2Activity;
-import com.example.tdycamera.mycamera.camera2.Camera2Activity;
-import com.example.tdycamera.mycamera.camera2.video.Camera2VideoActivity;
-import com.example.tdycamera.phonecamera.PhoneCameraActivity;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity  implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback  {
     private String TAG = getClass().getSimpleName();
-
-    private Button btnPhoneCamera;
     private Button btnCameraApi;
-    private Button btnCamera1;
-    private Button btnCamera2;
-    private Button btnCamera2Auto;
-    private Button btnCamera2Video;
-    private Button btnCamera2Basic;
 
 
     private int REQUEST_CAMERA_PERMISSION = 100;
@@ -49,47 +37,17 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         initListener();
     }
     private void initView(){
-        btnPhoneCamera = findViewById(R.id.btn_phoneCamera);
         btnCameraApi = findViewById(R.id.btn_camera_api);
-        btnCamera1 = findViewById(R.id.btn_camera1);
-        btnCamera2 = findViewById(R.id.btn_camera2);
-        btnCamera2Video = findViewById(R.id.btn_camera2_video);
-        btnCamera2Auto = findViewById(R.id.btn_camera2_auto);
-        btnCamera2Basic = findViewById(R.id.btn_camera2_basic);
     }
     private void initListener(){
-        btnPhoneCamera.setOnClickListener(this);
         btnCameraApi.setOnClickListener(this);
-        btnCamera1.setOnClickListener(this);
-        btnCamera2.setOnClickListener(this);
-        btnCamera2Video.setOnClickListener(this);
-        btnCamera2Auto.setOnClickListener(this);
-        btnCamera2Basic.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.btn_phoneCamera:
-                startActivity(new Intent(this, PhoneCameraActivity.class));
-                break;
             case R.id.btn_camera_api:
                 startActivity(new Intent(this, CameraApiActivity.class));
-                break;
-            case R.id.btn_camera1:
-                startActivity(new Intent(this, Camera1Activity.class));
-                break;
-            case R.id.btn_camera2:
-                startActivity(new Intent(this, Camera2Activity.class));
-                break;
-            case R.id.btn_camera2_video:
-                startActivity(new Intent(this, Camera2VideoActivity.class));
-                break;
-            case R.id.btn_camera2_auto:
-                startActivity(new Intent(this, AutoCamera2Activity.class));
-                break;
-            case R.id.btn_camera2_basic:
-                startActivity(new Intent(this, AutoCamera2Activity.class));
                 break;
         }
     }
@@ -99,7 +57,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         List<String> requestPermission = new ArrayList<>();
         for (String permission : permissions) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {//检查是否有了权限
-                //没有权限即动态申请
                 requestPermission.add(permission);
             }
         }
@@ -148,11 +105,9 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         }
     }
 
-    //获得全部权限
     public void onPermissionGranted(int requestCode) {
         Log.e(TAG,"已经获得权限");
     }
-    //权限被拒绝
     public void onPermissionReject(int requestCode) {
         finish();
     }
