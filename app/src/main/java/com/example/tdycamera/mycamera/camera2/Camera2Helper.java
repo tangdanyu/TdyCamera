@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-
+import com.example.yuvlib.YUVUtil;
 public class Camera2Helper {
     private static final String TAG = "Camera2BasicFragment";
 
@@ -152,7 +152,9 @@ public class Camera2Helper {
             if(image == null){
                 return;
             }
-            byte[] nv21 = ImageUtil.getDataFromImage(image,2);
+//            byte[] nv21 = ImageUtil.getDataFromImage(image,2);//13-20
+            byte[] nv21 = new byte[mPreviewSize.getHeight()*mPreviewSize.getWidth()*3/2];
+            YUVUtil.convertI420ToNV21(data,nv21,mPreviewSize.getHeight(),mPreviewSize.getWidth());//3-7  注意宽高要颠倒
 //            MyLogUtil.e(TAG,"转码耗时"+(System.currentTimeMillis() - before));
             mBackgroundHandler.post(new Runnable() {    // 在子线程执行，防止预览界面卡顿
                 @Override

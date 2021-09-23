@@ -1,5 +1,5 @@
 package com.example.tdycamera.mycamera.camera1;
-
+import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -8,8 +8,6 @@ import android.view.OrientationEventListener;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.ImageView;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
 import com.example.tdycamera.R;

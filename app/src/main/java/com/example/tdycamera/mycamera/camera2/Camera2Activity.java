@@ -1,17 +1,12 @@
 package com.example.tdycamera.mycamera.camera2;
-
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.Activity;
-import android.graphics.Bitmap;
 import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.provider.Settings;
 import android.view.OrientationEventListener;
-import android.os.Bundle;
-import android.view.View;
+import android.view.SurfaceView;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 
 import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
@@ -23,6 +18,9 @@ import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
 import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
 import com.example.tdycamera.utils.ImageUtil;
 import com.example.tdycamera.utils.MyLogUtil;
+import android.widget.Button;
+import android.view.View;
+import android.graphics.Bitmap;
 
 public class Camera2Activity extends AppCompatActivity implements View.OnClickListener {
     private String TAG = "Camera2Activity";
@@ -33,17 +31,19 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     private MNNFaceDetectorAdapter mnnFaceDetectorAdapter;  //阿里人脸识别工具类
     private MNNFaceDetectListener mnnFaceDetectListener;    //阿里人脸识别
     private MNNDrawUtil mnnDrawUtil;//特征点的绘制
+    private Activity activity;
 
     //相机控制
     private Camera2Helper camera2Helper;
     //相机数据回调
     private CameraListener cameraListener;
     //相机预览控件
+    private SurfaceView surfaceView;
     private AutoFitTextureView autoFitTextureView;
     private Button startBtn;
     private Button stopBtn;
     private ImageView previewIv;
-    private Activity activity;
+
     private long lastTime = System.currentTimeMillis();
 
     @Override
@@ -62,15 +62,15 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     private void initView() {
         startBtn = findViewById(R.id.start_btn);
         stopBtn = findViewById(R.id.stop_btn);
-        previewIv = findViewById(R.id.preview_iv);
-        startBtn.setOnClickListener(this);
-        stopBtn.setOnClickListener(this);
-
         autoFitTextureView = findViewById(R.id.texture_view);
+        surfaceView = findViewById(R.id.surface_view);
+        previewIv = findViewById(R.id.preview_iv);
 
     }
 
     private void initListener() {
+        startBtn.setOnClickListener(this);
+        stopBtn.setOnClickListener(this);
         cameraListener = new CameraListener() {
             @Override
             public void onCameraOpened(int width, int height, int displayOrientation) {
