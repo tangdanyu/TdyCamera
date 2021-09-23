@@ -42,10 +42,6 @@ public class AspectRatio implements Comparable<AspectRatio>, Parcelable {
         }
     }
 
-    /**
-     * 从格式化为“4:3”的string解析
-     * @param s 宽高比
-     */
     public static AspectRatio parse(String s) {
         int position = s.indexOf(':');
         if (position == -1) {
