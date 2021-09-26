@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import com.example.yuvlib.YUVUtil;
+
 public class Camera2Helper {
     private static final String TAG = "Camera2BasicFragment";
 
@@ -89,7 +89,7 @@ public class Camera2Helper {
 
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture texture, int width, int height) {
-             MyLogUtil.e(TAG, "onSurfaceTextureAvailable: width=" + width + ", height=" + height);//1080 2160
+            MyLogUtil.e(TAG, "onSurfaceTextureAvailable: width=" + width + ", height=" + height);//1080 2160
             openCamera();    // SurfaceTexture就绪后回调执行打开相机操作
         }
 
@@ -142,36 +142,49 @@ public class Camera2Helper {
      * ImageReader的回调函数
      */
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
+        private byte[] y;
+        private byte[] u;
+        private byte[] v;
+
         @Override
         public void onImageAvailable(ImageReader reader) {
             //我们可以将这帧数据转成字节数组，类似于Camera1的PreviewCallback回调的预览帧数据
             Image image = reader.acquireLatestImage();
-            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-            byte[] data = new byte[buffer.remaining()];
-            buffer.get(data);
-            if(image == null){
-                return;
-            }
-//            byte[] nv21 = ImageUtil.getDataFromImage(image,2);//13-20
-            byte[] nv21 = new byte[mPreviewSize.getHeight()*mPreviewSize.getWidth()*3/2];
-            YUVUtil.convertI420ToNV21(data,nv21,mPreviewSize.getHeight(),mPreviewSize.getWidth());//3-7  注意宽高要颠倒
-//            MyLogUtil.e(TAG,"转码耗时"+(System.currentTimeMillis() - before));
-            mBackgroundHandler.post(new Runnable() {    // 在子线程执行，防止预览界面卡顿
-                @Override
-                public void run() {
-
-                    mCameraListener.onCameraPreview(nv21,mPreviewSize.getWidth(),mPreviewSize.getHeight(),mOrientation);
+            // 实际结果一般是 Y:U:V == 4:2:2
+            if (image.getFormat() == ImageFormat.YUV_420_888) {
+                Image.Plane[] planes = image.getPlanes();
+                // 重复使用同一批byte数组，减少gc频率
+                if (y == null) {
+                    y = new byte[planes[0].getBuffer().limit() - planes[0].getBuffer().position()];
+                    u = new byte[planes[1].getBuffer().limit() - planes[1].getBuffer().position()];
+                    v = new byte[planes[2].getBuffer().limit() - planes[2].getBuffer().position()];
                 }
-            });
+                if (image.getPlanes()[0].getBuffer().remaining() == y.length) {
+                    planes[0].getBuffer().get(y);
+                    planes[1].getBuffer().get(u);
+                    planes[2].getBuffer().get(v);
+                    mCameraListener.onPreview(y, u, v, mPreviewSize, planes[0].getRowStride());
+                }
+                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                byte[] data = new byte[buffer.remaining()];
+                buffer.get(data);
+                if (image == null) {
+                    return;
+                }
+                if (mCameraListener != null) {
+                    mCameraListener.onCameraPreview(data, mPreviewSize.getWidth(), mPreviewSize.getHeight(), mOrientation);
+                }
+            }
             image.close(); // 这里一定要close，不然预览会卡死
         }
     };
 
-    public boolean isFrontCamera(){
+    public boolean isFrontCamera() {
         return isFrontCamera;
     }
+
     public void onResume() {
-         MyLogUtil.e(TAG, "onResume: ");
+        MyLogUtil.e(TAG, "onResume: ");
         startBackgroundThread();
         // 当屏幕关闭后重新打开, 若SurfaceTexture已经就绪, 此时onSurfaceTextureAvailable不会被回调, 这种情况下
         // 如果SurfaceTexture已经就绪, 则直接打开相机, 否则等待SurfaceTexture已经就绪的回调
@@ -184,7 +197,7 @@ public class Camera2Helper {
     }
 
     public void onPause() {
-         MyLogUtil.e(TAG, "onPause: ");
+        MyLogUtil.e(TAG, "onPause: ");
         closeCamera();
         stopBackgroundThread();
     }
@@ -194,7 +207,7 @@ public class Camera2Helper {
     }
 
     /**
-     *  打开相机
+     * 打开相机
      * 1. 获取相机权限
      * 2. 根据相机特性选取合适的Camera
      * 3. 通过CameraManager打开选择的相机
@@ -226,7 +239,7 @@ public class Camera2Helper {
 
     /**
      * 设置相机的输出, 以支持全屏预览
-     *
+     * <p>
      * 处理流程如下:
      * 1. 获取当前的摄像头支持的输出map和帧率信息，并跳过前置摄像头
      * 2. 判断显示方向和摄像头传感器方向是否一致, 是否需要旋转画面
@@ -265,15 +278,15 @@ public class Camera2Helper {
                 int displayRotation = ((WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
                 int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
                 boolean swappedDimensions = false;
-                MyLogUtil.e(TAG,"displayRotation: " + displayRotation);   // displayRotation: 0
-                MyLogUtil.e(TAG,"sensorOritentation: " + sensorOrientation);  // sensorOritentation: 270
+                MyLogUtil.e(TAG, "displayRotation: " + displayRotation);   // displayRotation: 0
+                MyLogUtil.e(TAG, "sensorOritentation: " + sensorOrientation);  // sensorOritentation: 270
                 switch (displayRotation) {
                     // ROTATION_0和ROTATION_180都是竖屏只需做同样的处理操作
                     // 显示为竖屏时, 若传感器方向为90或者270, 则需要进行转换(标志位置true)
                     case Surface.ROTATION_0:
                     case Surface.ROTATION_180:
                         if (sensorOrientation == 90 || sensorOrientation == 270) {
-                             MyLogUtil.e(TAG, "swappedDimensions set true !");//true
+                            MyLogUtil.e(TAG, "swappedDimensions set true !");//true
                             swappedDimensions = true;
                         }
                         break;
@@ -315,8 +328,8 @@ public class Camera2Helper {
                         screenWidth, screenHeight, swappedDimensions);
 
                 // 这里返回的selectPreviewSize，要注意横竖屏的区分
-                 MyLogUtil.e(TAG, "selectPreviewSize.getWidth: " + selectPreviewSize.getWidth());  // 1920
-                 MyLogUtil.e(TAG, "selectPreviewSize.getHeight: " + selectPreviewSize.getHeight());  // 1080
+                MyLogUtil.e(TAG, "selectPreviewSize.getWidth: " + selectPreviewSize.getWidth());  // 1920
+                MyLogUtil.e(TAG, "selectPreviewSize.getHeight: " + selectPreviewSize.getHeight());  // 1080
 
                 // 横竖屏尺寸交换，以便后面设置各种surface统一代码
                 if (swappedDimensions) mPreviewSize = selectPreviewSize;
@@ -325,10 +338,10 @@ public class Camera2Helper {
                 }
                 mOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
                 if (mCameraListener != null) {
-                    mCameraListener.onCameraOpened(mPreviewSize.getWidth(), mPreviewSize.getHeight(),mOrientation);
+                    mCameraListener.onCameraOpened(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mOrientation);
                 }
-                 MyLogUtil.e(TAG, "mPreviewSize.getWidth: " + mPreviewSize.getWidth());  // 1920
-                 MyLogUtil.e(TAG, "mPreviewSize.getHeight: " + mPreviewSize.getHeight());  // 1080
+                MyLogUtil.e(TAG, "mPreviewSize.getWidth: " + mPreviewSize.getWidth());  // 1920
+                MyLogUtil.e(TAG, "mPreviewSize.getHeight: " + mPreviewSize.getHeight());  // 1080
 
                 mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
 
@@ -358,18 +371,20 @@ public class Camera2Helper {
             for (Size option : choices) {
                 String str = "[" + option.getWidth() + ", " + option.getHeight() + "]";
                 stringBuilder.append(str);
-                if (option.getHeight() != screenWidth || option.getWidth() > screenHeight) continue;
+                if (option.getHeight() != screenWidth || option.getWidth() > screenHeight)
+                    continue;
                 bigEnough.add(option);
             }
         } else {     // 横屏
             for (Size option : choices) {
                 String str = "[" + option.getWidth() + ", " + option.getHeight() + "]";
                 stringBuilder.append(str);
-                if (option.getWidth() != screenHeight || option.getHeight() > screenWidth) continue;
+                if (option.getWidth() != screenHeight || option.getHeight() > screenWidth)
+                    continue;
                 bigEnough.add(option);
             }
         }
-         MyLogUtil.e(TAG, "chooseOptimalSize: " + stringBuilder);
+        MyLogUtil.e(TAG, "chooseOptimalSize: " + stringBuilder);
 
         if (bigEnough.size() > 0) {
             return Collections.max(bigEnough, new CompareSizesByArea());
@@ -381,7 +396,7 @@ public class Camera2Helper {
 
     /**
      * 创建预览对话
-     *
+     * <p>
      * 1. 获取用于输出预览的surface
      * 2. CaptureRequestBuilder的基本配置
      * 3. 创建CaptureSession，等待回调
@@ -389,7 +404,7 @@ public class Camera2Helper {
      * 5. 重复构建上述请求，以达到实时预览
      */
     private void createCameraPreviewSession() {
-        if(mImageReader!= null){
+        if (mImageReader != null) {
             mImageReader.close();
             mImageReader = null;
         }
@@ -462,7 +477,7 @@ public class Camera2Helper {
         }
     }
 
-    private void config(){
+    private void config() {
         try {
             mCaptureSession.stopRepeating();//停止预览，准备切换到录制视频
             mCaptureSession.close();//关闭预览的会话，需要重新创建录制视频的会话
@@ -492,7 +507,7 @@ public class Camera2Helper {
             mPreviewRequestBuilder.addTarget(mImageReader.getSurface());
             mPreviewRequestBuilder.addTarget(recorderSurface);
             // 创建预览的捕获会话
-            mCameraDevice.createCaptureSession(Arrays.asList(previewSurface, mImageReader.getSurface(),recorderSurface),
+            mCameraDevice.createCaptureSession(Arrays.asList(previewSurface, mImageReader.getSurface(), recorderSurface),
 //            mCameraDevice.createCaptureSession(Arrays.asList(previewSurface,recorderSurface),
                     new CameraCaptureSession.StateCallback() {
                         //一个会话的创建需要比较长的时间，当创建成功后就会执行onConfigured回调
@@ -542,6 +557,7 @@ public class Camera2Helper {
             e.printStackTrace();
         }
     }
+
     /**
      * 关闭正在使用的相机
      */
@@ -599,16 +615,16 @@ public class Camera2Helper {
     /**
      * 初始化MediaRecorder
      */
-    private void initMediaRecorder(){
+    private void initMediaRecorder() {
         mMediaRecorder = new MediaRecorder();
     }
 
     public void setMediaRecorderConfig(int width, int height) {
-        File file = new File(mContext.getExternalCacheDir(),"demo.mp4");
-        if (file.exists()){
+        File file = new File(mContext.getExternalCacheDir(), "demo.mp4");
+        if (file.exists()) {
             file.delete();
         }
-        MyLogUtil.e(TAG,"视频录制"+file.getPath());
+        MyLogUtil.e(TAG, "视频录制" + file.getPath());
 //            mMediaRecorder.setCamera(mCamera);//camera1
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
 //        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);//camera1
@@ -632,7 +648,7 @@ public class Camera2Helper {
 
     public void startRecord() {
         config();
-        MyLogUtil.e(TAG,"startRecord");
+        MyLogUtil.e(TAG, "startRecord");
         mMediaRecorder.start();
     }
 

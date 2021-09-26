@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * 相机辅助类，和{@link CameraListener}共同使用，获取nv21数据等操作
  */
-public class Camera1Helper implements Camera.PreviewCallback {
+public class Camera1Helper implements Camera.PreviewCallback,Camera.PictureCallback{
     private String TAG = "CameraHelper";
     private static final int INVALID_CAMERA_ID = -1;
     //相机id
@@ -406,4 +406,10 @@ public class Camera1Helper implements Camera.PreviewCallback {
     }
 
 
+    @Override
+    public void onPictureTaken(byte[] bytes, Camera camera) {
+        if (cameraListener != null) {
+            cameraListener.onPictureTaken(bytes);
+        }
+    }
 }

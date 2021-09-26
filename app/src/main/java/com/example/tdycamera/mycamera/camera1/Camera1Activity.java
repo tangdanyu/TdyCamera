@@ -21,12 +21,13 @@ import com.example.tdycamera.utils.ImageUtil;
 public class Camera1Activity extends AppCompatActivity {
     private String TAG = "Camera1Activity";
     /****阿里Mnn相关*****/
-    private int mRotateDegree; // 屏幕旋转角度：0/90/180/270
-    private OrientationEventListener orientationListener;       // 监听屏幕旋转
     private MNNFaceDetectorAdapter mnnFaceDetectorAdapter;  //阿里人脸识别工具类
     private MNNFaceDetectListener mnnFaceDetectListener;    //阿里人脸识别
     private MNNDrawUtil mnnDrawUtil;//特征点的绘制
     private Activity activity;
+
+    private int mRotateDegree; // 屏幕旋转角度：0/90/180/270
+    private OrientationEventListener orientationListener;       // 监听屏幕旋转
 
     //相机控制
     private Camera1Helper camera1Helper;
@@ -78,6 +79,7 @@ public class Camera1Activity extends AppCompatActivity {
 
             @Override
             public void onCameraClosed() {
+
             }
 
             @Override
