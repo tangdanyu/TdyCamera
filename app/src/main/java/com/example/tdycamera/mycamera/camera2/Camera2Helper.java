@@ -1,14 +1,18 @@
 package com.example.tdycamera.mycamera.camera2;
+
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+
 import com.example.tdycamera.listener.CameraListener;
-import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
-import com.example.tdycamera.utils.ImageUtil;
 import com.example.tdycamera.utils.MyLogUtil;
+import com.example.tdycamera.view.AutoFitTextureView;
+
 import android.media.MediaRecorder;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
 import android.util.DisplayMetrics;
 import android.Manifest;
 import android.content.Context;
@@ -150,30 +154,11 @@ public class Camera2Helper {
         public void onImageAvailable(ImageReader reader) {
             //我们可以将这帧数据转成字节数组，类似于Camera1的PreviewCallback回调的预览帧数据
             Image image = reader.acquireLatestImage();
-            // 实际结果一般是 Y:U:V == 4:2:2
-            if (image.getFormat() == ImageFormat.YUV_420_888) {
-                Image.Plane[] planes = image.getPlanes();
-                // 重复使用同一批byte数组，减少gc频率
-                if (y == null) {
-                    y = new byte[planes[0].getBuffer().limit() - planes[0].getBuffer().position()];
-                    u = new byte[planes[1].getBuffer().limit() - planes[1].getBuffer().position()];
-                    v = new byte[planes[2].getBuffer().limit() - planes[2].getBuffer().position()];
-                }
-                if (image.getPlanes()[0].getBuffer().remaining() == y.length) {
-                    planes[0].getBuffer().get(y);
-                    planes[1].getBuffer().get(u);
-                    planes[2].getBuffer().get(v);
-                    mCameraListener.onPreview(y, u, v, mPreviewSize, planes[0].getRowStride());
-                }
-                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                byte[] data = new byte[buffer.remaining()];
-                buffer.get(data);
-                if (image == null) {
-                    return;
-                }
-                if (mCameraListener != null) {
-                    mCameraListener.onCameraPreview(data, mPreviewSize.getWidth(), mPreviewSize.getHeight(), mOrientation);
-                }
+            if (image == null) {
+                return;
+            }
+            if (mCameraListener != null) {
+                mCameraListener.onPreviewFrame(image, image.getWidth(), image.getHeight(), mOrientation);
             }
             image.close(); // 这里一定要close，不然预览会卡死
         }

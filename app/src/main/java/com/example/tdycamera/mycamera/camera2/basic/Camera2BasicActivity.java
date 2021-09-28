@@ -39,7 +39,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.example.tdycamera.R;
-import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
+import com.example.tdycamera.view.AutoFitTextureView;
 
 import java.io.File;
 import java.io.FileOutputStream;

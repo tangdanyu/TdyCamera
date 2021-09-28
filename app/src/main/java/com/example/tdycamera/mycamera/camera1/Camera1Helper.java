@@ -10,8 +10,8 @@ import android.view.TextureView;
 import android.view.View;
 
 import com.example.tdycamera.listener.CameraListener;
-import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
 import com.example.tdycamera.utils.MyLogUtil;
+import com.example.tdycamera.view.AutoFitTextureView;
 
 import java.io.IOException;
 import java.util.List;
@@ -113,7 +113,7 @@ public class Camera1Helper implements Camera.PreviewCallback,Camera.PictureCallb
 
 
     // 参数设置
-    public Camera1Helper(Context context, CameraListener cameraListener, View previewDisplayView) {
+    public Camera1Helper(Context context,View previewDisplayView, CameraListener cameraListener) {
         this.context = context;
         this.cameraListener = cameraListener;
         this.previewDisplayView = previewDisplayView;

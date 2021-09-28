@@ -2,6 +2,7 @@ package com.example.tdycamera.mycamera.camera2;
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.hardware.SensorManager;
+import android.media.Image;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.OrientationEventListener;
@@ -15,12 +16,15 @@ import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mnn.MNNDrawUtil;
 import com.example.tdycamera.mnn.MNNFaceDetectListener;
 import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
-import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
 import com.example.tdycamera.utils.ImageUtil;
 import com.example.tdycamera.utils.MyLogUtil;
+import com.example.tdycamera.view.AutoFitTextureView;
+
 import android.widget.Button;
 import android.view.View;
 import android.graphics.Bitmap;
+
+import java.nio.ByteBuffer;
 
 public class Camera2Activity extends AppCompatActivity implements View.OnClickListener {
     private String TAG = "Camera2Activity";
@@ -86,15 +90,40 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
                             width, height, autoFitTextureView.getMeasuredHeight(), autoFitTextureView.getMeasuredWidth(), screenAutoRotate());
                 }
             }
-
             @Override
-            public void onCameraClosed() {
+            public void onPreviewFrame(Image image,int width,int height,int displayOrientation){
+                lastTime = System.currentTimeMillis();
+                ByteBuffer bufferY = image.getPlanes()[0].getBuffer();
+                ByteBuffer bufferU = image.getPlanes()[1].getBuffer();
+                ByteBuffer bufferV = image.getPlanes()[2].getBuffer();
 
-            }
+                ByteBuffer yuvbuffer = ByteBuffer.allocateDirect(bufferY.remaining() + bufferU.remaining() + bufferV.remaining());
+                yuvbuffer.put(bufferY);
+                yuvbuffer.put(bufferV);
+                yuvbuffer.put(bufferU);
+                image.close();
 
-            @Override
-            public void onBitmap(Bitmap bitmap, int displayOrientation) {
-                MyLogUtil.e(TAG, "onBitmap getWidth" + bitmap.getWidth() + " getHeight" + bitmap.getHeight());
+                byte[] data = yuvbuffer.array();
+
+                MyLogUtil.e(TAG,"耗时="+(System.currentTimeMillis() - lastTime));//7ms
+                int inAngle = camera2Helper.isFrontCamera() ? (displayOrientation + 360 - mRotateDegree) % 360 : (displayOrientation + mRotateDegree) % 360;
+                int outAngle = 0;
+                if (!screenAutoRotate()) {
+                    outAngle = camera2Helper.isFrontCamera() ? (360 - mRotateDegree) % 360 : mRotateDegree % 360;
+                }
+                FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height, 1, inAngle, outAngle, true);
+                if (results != null) {
+                    mnnDrawUtil.drawResult(displayOrientation, mRotateDegree, results);
+                } else {
+                    mnnDrawUtil.drawClear();
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        previewIv.setImageBitmap(ImageUtil.nv21ToBitmap(data, width, height, getBaseContext()));
+                    }
+                });
+
             }
 
             @Override

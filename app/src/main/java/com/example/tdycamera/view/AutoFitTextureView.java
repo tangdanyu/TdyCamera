@@ -1,4 +1,4 @@
-package com.example.tdycamera.mycamera.camera2.view;
+package com.example.tdycamera.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
