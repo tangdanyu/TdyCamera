@@ -5,6 +5,8 @@ import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
 import com.example.tdycamera.utils.ImageUtil;
 import com.example.tdycamera.utils.MyLogUtil;
+import com.example.yuvlib.YUVUtil;
+
 import android.media.MediaRecorder;
 import java.io.File;
 import java.io.IOException;
@@ -66,6 +68,7 @@ public class Camera2Helper {
     private Handler mBackgroundHandler;          // 上面定义的子线程的处理器
     private ImageReader mImageReader;            // 用于获取画面的数据，并进行识别 YUV_420_888
     private int imageFormat = ImageFormat.YUV_420_888;
+    private int format = ImageFormat.NV21;
 
     private CaptureRequest.Builder mPreviewRequestBuilder;  // 预览请求构建器
     private CaptureRequest mPreviewRequest;      // 预览请求, 由上面的构建器构建出来
@@ -145,37 +148,93 @@ public class Camera2Helper {
         private byte[] y;
         private byte[] u;
         private byte[] v;
-
+        private byte[] i420;
+        private byte[] yv12;
+        private byte[] nv21;
+        private byte[] nv12;
         @Override
         public void onImageAvailable(ImageReader reader) {
-            //我们可以将这帧数据转成字节数组，类似于Camera1的PreviewCallback回调的预览帧数据
+            //获取最新的一帧的Image
             Image image = reader.acquireLatestImage();
             // 实际结果一般是 Y:U:V == 4:2:2
             if (image.getFormat() == ImageFormat.YUV_420_888) {
-                Image.Plane[] planes = image.getPlanes();
-                // 重复使用同一批byte数组，减少gc频率
-                if (y == null) {
-                    y = new byte[planes[0].getBuffer().limit() - planes[0].getBuffer().position()];
-                    u = new byte[planes[1].getBuffer().limit() - planes[1].getBuffer().position()];
-                    v = new byte[planes[2].getBuffer().limit() - planes[2].getBuffer().position()];
+                MyLogUtil.e(TAG, "width: "+image.getWidth());//1920
+                MyLogUtil.e(TAG, "height: "+image.getHeight());//1080
+                MyLogUtil.e(TAG, "format: "+image.getFormat());//ImageFormat.YUV_420_888 =35
+                MyLogUtil.e(TAG, "timeStamp: "+ image.getTimestamp());//时间戳
+
+                if (nv21 == null) {
+                    nv21 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
                 }
-                if (image.getPlanes()[0].getBuffer().remaining() == y.length) {
-                    planes[0].getBuffer().get(y);
-                    planes[1].getBuffer().get(u);
-                    planes[2].getBuffer().get(v);
+                if (nv12 == null) {
+                    nv12 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
+                }
+                if (i420 == null) {
+                    i420 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
+                }
+                if (yv12 == null) {
+                    yv12 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
+                }
+                if (y == null) {
+                    y = new byte[image.getPlanes()[0].getBuffer().remaining()];
+                    u = new byte[image.getPlanes()[1].getBuffer().remaining()];
+                    v = new byte[image.getPlanes()[2].getBuffer().remaining()];
+                }
+                // 从image里获取三个plane
+                Image.Plane[] planes = image.getPlanes();
+                for (int i = 0; i < planes.length; i++) {
+                    ByteBuffer iBuffer = planes[i].getBuffer();
+                    int iSize = iBuffer.remaining();
+                    MyLogUtil.e(TAG, "pixelStride  " + planes[i].getPixelStride());
+                    MyLogUtil.e(TAG, "rowStride   " + planes[i].getRowStride());
+                    MyLogUtil.e(TAG, "buffer Size  " + iSize);
+                    MyLogUtil.e(TAG, "Finished reading data from plane  " + i);
+                }
+                int width = image.getWidth();
+                int height = image.getHeight();
+                planes[0].getBuffer().get(y);
+                planes[1].getBuffer().get(u);
+                planes[2].getBuffer().get(v);
+
+                if (mCameraListener != null) {
                     mCameraListener.onPreview(y, u, v, mPreviewSize, planes[0].getRowStride());
                 }
-                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                byte[] data = new byte[buffer.remaining()];
-                buffer.get(data);
-                if (image == null) {
-                    return;
+                int pixelStride = planes[1].getPixelStride();
+                if (pixelStride == 1) {//420p,i420/yv12
+                    if(format == ImageFormat.YV12){
+                        //i420
+                        System.arraycopy(y, 0, i420, 0, y.length);
+                        System.arraycopy(u, 0, i420, y.length, u.length);
+                        System.arraycopy(v, 0, i420, y.length + u.length, v.length);
+                        YUVUtil.convertI420ToNV21(i420, nv21, width, height);
+                    }else {
+                        //yv12
+                        System.arraycopy(y, 0, yv12, 0, y.length);
+                        System.arraycopy(v, 0, yv12, y.length, v.length);
+                        System.arraycopy(u, 0, yv12, y.length + v.length, u.length);
+                        YUVUtil.convertYV12ToI420(yv12,i420,width,height);
+                        YUVUtil.convertI420ToNV21(i420, nv21, width, height);
+                    }
+
+                } else if (pixelStride == 2) {//420sp,nv21/nv12
+                    //nv21
+                    if(format == ImageFormat.NV21){
+                        System.arraycopy(y, 0, nv21, 0, y.length);
+                        System.arraycopy(v, 0, nv21, y.length, v.length);
+                    }else {
+                        //nv12
+                        System.arraycopy(y, 0, nv12, 0, y.length);
+                        System.arraycopy(u, 0, nv12, y.length, u.length);
+                        YUVUtil.convertNV12ToI420(nv12, i420, width, height);
+                        YUVUtil.convertI420ToNV21(i420, nv21, width, height);
+                    }
                 }
                 if (mCameraListener != null) {
-                    mCameraListener.onCameraPreview(data, mPreviewSize.getWidth(), mPreviewSize.getHeight(), mOrientation);
+                    mCameraListener.onCameraPreview(nv21, mPreviewSize.getWidth(), mPreviewSize.getHeight(), mOrientation);
                 }
             }
-            image.close(); // 这里一定要close，不然预览会卡死
+
+            image.close(); // 这里一定要close，不然预览会卡死,否则不会收到新的Image回调。
         }
     };
 
