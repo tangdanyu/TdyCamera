@@ -2,6 +2,7 @@ package com.example.tdycamera.listener;
 
 
 import android.graphics.Bitmap;
+import android.media.Image;
 import android.util.Size;
 
 public interface CameraListener {
@@ -16,6 +17,7 @@ public interface CameraListener {
 
     default void onPreview(byte[] y, byte[] u, byte[] v, Size previewSize, int stride) {
     }
+    default void onPreviewFrame(Image image, int width, int height, int orientation){}
 
     default void onPictureTaken(byte[] data) {
     }
