@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true">
-        <com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView
+        <com.example.tdycamera.view.AutoFitTextureView
             android:id="@+id/texture"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

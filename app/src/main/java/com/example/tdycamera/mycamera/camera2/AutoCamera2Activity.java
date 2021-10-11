@@ -22,7 +22,7 @@ import com.example.tdycamera.R;
 import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mnn.MNNFaceDetectListener;
 import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
-import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
+import com.example.tdycamera.view.AutoFitTextureView;
 import com.example.tdycamera.utils.MyLogUtil;
 import android.Manifest;
 import android.content.Context;

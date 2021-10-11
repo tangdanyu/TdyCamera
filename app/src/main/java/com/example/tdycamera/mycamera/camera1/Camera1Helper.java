@@ -10,7 +10,7 @@ import android.view.TextureView;
 import android.view.View;
 
 import com.example.tdycamera.listener.CameraListener;
-import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
+import com.example.tdycamera.view.AutoFitTextureView;
 import com.example.tdycamera.utils.MyLogUtil;
 
 import java.io.IOException;

@@ -15,7 +15,7 @@ import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mnn.MNNDrawUtil;
 import com.example.tdycamera.mnn.MNNFaceDetectListener;
 import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
-import com.example.tdycamera.mycamera.camera2.view.AutoFitTextureView;
+import com.example.tdycamera.view.AutoFitTextureView;
 import com.example.tdycamera.utils.ImageUtil;
 
 public class Camera1Activity extends AppCompatActivity {
