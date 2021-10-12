@@ -18,7 +18,9 @@ import com.example.tdycamera.apicamera.CameraApiActivity;
 import com.example.tdycamera.mycamera.camera1.Camera1Activity;
 import com.example.tdycamera.mycamera.camera2.AutoCamera2Activity;
 import com.example.tdycamera.mycamera.camera2.Camera2Activity;
+import com.example.tdycamera.mycamera.camera2.basic.Camera2BasicActivity;
 import com.example.tdycamera.mycamera.camera2.video.Camera2VideoActivity;
+import com.example.tdycamera.mycamera.camerax.CameraXBasicActivity;
 import com.example.tdycamera.phonecamera.PhoneCameraActivity;
 
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private Button btnCamera2Auto;
     private Button btnCamera2Video;
     private Button btnCamera2Basic;
+    private Button btnCameraxDemo;
 
 
     private int REQUEST_CAMERA_PERMISSION = 100;
@@ -56,6 +59,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera2Video = findViewById(R.id.btn_camera2_video);
         btnCamera2Auto = findViewById(R.id.btn_camera2_auto);
         btnCamera2Basic = findViewById(R.id.btn_camera2_basic);
+        btnCameraxDemo = findViewById(R.id.btn_camerax_demo);
     }
     private void initListener(){
         btnPhoneCamera.setOnClickListener(this);
@@ -65,6 +69,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera2Video.setOnClickListener(this);
         btnCamera2Auto.setOnClickListener(this);
         btnCamera2Basic.setOnClickListener(this);
+        btnCameraxDemo.setOnClickListener(this);
     }
 
     @Override
@@ -89,7 +94,10 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 startActivity(new Intent(this, AutoCamera2Activity.class));
                 break;
             case R.id.btn_camera2_basic:
-                startActivity(new Intent(this, AutoCamera2Activity.class));
+                startActivity(new Intent(this, Camera2BasicActivity.class));
+                break;
+            case R.id.btn_camerax_demo:
+                startActivity(new Intent(this, CameraXBasicActivity.class));
                 break;
         }
     }

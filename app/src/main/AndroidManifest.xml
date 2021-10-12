@@ -17,8 +17,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TdyCamera">
         <activity
-            android:name=".mycamera.camerax.CmeraxActivity"
-            android:exported="true" />
+            android:name=".mycamera.camerax.CameraXBasicActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/fullScreen" />
         <activity
             android:name=".mycamera.camera1.Camera1Activity"
             android:exported="true"

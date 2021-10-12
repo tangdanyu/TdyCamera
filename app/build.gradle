@@ -35,12 +35,40 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation 'androidx.camera:camera-core:1.1.0-alpha03'
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
     //阿里巴巴人脸识别
     implementation 'com.alibaba.android.mnnkit:facedetection:0.0.5'
+
+
+    // App compat and UI things
+//    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
+
+    // Navigation library
+//    def nav_version = "2.3.5"
+//    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+//    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+
+    // CameraX core library
+    def camerax_version = '1.1.0-alpha07'
+    implementation "androidx.camera:camera-core:$camerax_version"
+
+    // CameraX Camera2 extensions
+    implementation "androidx.camera:camera-camera2:$camerax_version"
+
+    // CameraX Lifecycle library 生命周期库
+    implementation "androidx.camera:camera-lifecycle:$camerax_version"
+
+    // CameraX View class 视图类
+    implementation 'androidx.camera:camera-view:1.0.0-alpha27'
+
+    // CameraX Extensions library 扩展库
+    // implementation 'androidx.camera:camera-extensions:1.0.0-alpha27'
+
+    //WindowManager
+    implementation 'androidx.window:window:1.0.0-alpha09'
 
 }
