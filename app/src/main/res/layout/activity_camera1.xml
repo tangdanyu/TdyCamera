@@ -16,6 +16,21 @@
 
     <include layout="@layout/mnn_view" />
 
+    <Button
+        android:id="@+id/switch_camera_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:text="切换"
+        />
+
+    <Button
+        android:id="@+id/setting_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|right"
+        android:text="设置"
+        />
 
     <Button
         android:id="@+id/start_btn"

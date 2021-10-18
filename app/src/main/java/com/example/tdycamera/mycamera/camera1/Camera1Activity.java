@@ -1,12 +1,16 @@
 package com.example.tdycamera.mycamera.camera1;
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
+import android.content.Intent;
+import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.OrientationEventListener;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
@@ -15,10 +19,11 @@ import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mnn.MNNDrawUtil;
 import com.example.tdycamera.mnn.MNNFaceDetectListener;
 import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
+import com.example.tdycamera.phonecamera.PhoneCameraActivity;
 import com.example.tdycamera.view.AutoFitTextureView;
 import com.example.tdycamera.utils.ImageUtil;
 
-public class Camera1Activity extends AppCompatActivity {
+public class Camera1Activity extends AppCompatActivity implements View.OnClickListener {
     private String TAG = "Camera1Activity";
     /****阿里Mnn相关*****/
     private MNNFaceDetectorAdapter mnnFaceDetectorAdapter;  //阿里人脸识别工具类
@@ -40,6 +45,9 @@ public class Camera1Activity extends AppCompatActivity {
 
     private long lastTime = System.currentTimeMillis();
 
+    private Button switchCameraBtn;
+    private Button settingBtn;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,10 +65,13 @@ public class Camera1Activity extends AppCompatActivity {
         autoFitTextureView = findViewById(R.id.texture_view);
         surfaceView = findViewById(R.id.surface_view);
         previewIv = findViewById(R.id.preview_iv);
-
+        switchCameraBtn = findViewById(R.id.switch_camera_btn);
+        settingBtn = findViewById(R.id.setting_btn);
     }
 
     private void initListener() {
+        switchCameraBtn.setOnClickListener(this);
+        settingBtn.setOnClickListener(this);
         cameraListener = new CameraListener() {
             @Override
             public void onCameraOpened(int width, int height, int displayOrientation) {
@@ -188,5 +199,19 @@ public class Camera1Activity extends AppCompatActivity {
         }
 
         return autoRotate;
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.switch_camera_btn:
+                if(camera1Helper!= null){
+                    camera1Helper.switchCamera();
+                }
+                break;
+            case R.id.setting_btn:
+                startActivity(new Intent(getBaseContext(), Camera1SettingsActivity.class));
+                break;
+        }
     }
 }

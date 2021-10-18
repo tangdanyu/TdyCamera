@@ -1,11 +1,10 @@
-package com.example.tdycamera.view;
+package com.example.tdycamera.apicamera;
 
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-
 import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.FrameLayout;
@@ -19,12 +18,11 @@ import com.example.tdycamera.R;
 import com.example.tdycamera.api.Camera1;
 import com.example.tdycamera.api.Camera2;
 import com.example.tdycamera.api.Camera2Api23;
-import com.example.tdycamera.api.SurfaceViewPreview;
-import com.example.tdycamera.api.TextureViewPreview;
 import com.example.tdycamera.base.AspectRatio;
 import com.example.tdycamera.base.CameraViewImpl;
 import com.example.tdycamera.base.Constants;
 import com.example.tdycamera.base.PreviewImpl;
+import com.example.tdycamera.view.DisplayOrientationDetector;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

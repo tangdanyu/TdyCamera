@@ -13,19 +13,23 @@
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_auto_camera2.xml" value="0.1" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera.xml" value="0.13994565217391305" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera1.xml" value="0.22" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera1_setting.xml" value="0.3536458333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera2.xml" value="0.16" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera2_basic.xml" value="0.1" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera2_video.xml" value="0.1515625" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camera_api.xml" value="0.19427083333333334" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_camerax.xml" value="0.12545289855072464" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_main.xml" value="0.18" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_phone_camera.xml" value="0.22864583333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/fragment_camera2_basic.xml" value="0.196875" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/mnn_view.xml" value="0.1" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/settings_activity.xml" value="0.3536458333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/surface_view.xml" value="0.20520833333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/texture_view.xml" value="0.20520833333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/menu/main.xml" value="0.20520833333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.38229166666666664" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.38229166666666664" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/xml/root_preferences.xml" value="0.1" />
       </map>
     </option>
   </component>

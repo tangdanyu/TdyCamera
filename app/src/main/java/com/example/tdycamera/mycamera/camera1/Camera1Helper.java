@@ -9,6 +9,7 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 
+import com.example.tdycamera.apicamera.CameraView;
 import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.view.AutoFitTextureView;
 import com.example.tdycamera.utils.MyLogUtil;
@@ -22,6 +23,9 @@ import java.util.List;
  */
 public class Camera1Helper implements Camera.PreviewCallback,Camera.PictureCallback{
     private String TAG = "CameraHelper";
+
+    private static Camera1Helper instance = null;
+
     private static final int INVALID_CAMERA_ID = -1;
     //相机id
     private int mCameraId;
@@ -111,7 +115,13 @@ public class Camera1Helper implements Camera.PreviewCallback,Camera.PictureCallb
         }
     };
 
+    public static Camera1Helper getInstance(Context context, CameraListener cameraListener, View previewDisplayView) {
+        if (instance == null) {
+            instance = new Camera1Helper(context,cameraListener,previewDisplayView);
+        }
 
+        return instance;
+    }
     // 参数设置
     public Camera1Helper(Context context, CameraListener cameraListener, View previewDisplayView) {
         this.context = context;
@@ -171,12 +181,14 @@ public class Camera1Helper implements Camera.PreviewCallback,Camera.PictureCallb
     //设置预览控件
     private void setPreview() {
         try {
-            if (previewDisplayView instanceof TextureView) {
-                mCamera.setPreviewTexture(((TextureView) previewDisplayView).getSurfaceTexture());
-            } else {
-                mCamera.setPreviewDisplay(((SurfaceView) previewDisplayView).getHolder());
+            if(previewDisplayView!= null){
+                if (previewDisplayView instanceof TextureView) {
+                    mCamera.setPreviewTexture(((TextureView) previewDisplayView).getSurfaceTexture());
+                } else {
+                    mCamera.setPreviewDisplay(((SurfaceView) previewDisplayView).getHolder());
+                }
+                mCamera.setPreviewCallback(this);
             }
-            mCamera.setPreviewCallback(this);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -188,11 +200,9 @@ public class Camera1Helper implements Camera.PreviewCallback,Camera.PictureCallb
     }
 
     //切换摄像头
-    public void setFacing(int facing) {
-        if (mFacing == facing) {
-            return;
-        }
-        mFacing = facing;
+    public void switchCamera() {
+        mFacing = (mCameraId == CameraView.FACING_FRONT) ?
+                CameraView.FACING_BACK : CameraView.FACING_FRONT;
         if (isCameraOpened()) {
             stop();
             start();
@@ -250,10 +260,6 @@ public class Camera1Helper implements Camera.PreviewCallback,Camera.PictureCallb
         if (mShowingPreview) {
             mCamera.startPreview();
         }
-    }
-
-    public boolean isReady() {
-        return previewDisplayView.getWidth() != 0 && previewDisplayView.getHeight() != 0;
     }
 
     //修改相机的预览尺寸
@@ -411,5 +417,8 @@ public class Camera1Helper implements Camera.PreviewCallback,Camera.PictureCallb
         if (cameraListener != null) {
             cameraListener.onPictureTaken(bytes);
         }
+    }
+    public Camera getCamera(){
+        return mCamera;
     }
 }

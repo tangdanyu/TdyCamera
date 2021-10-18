@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.tdycamera.api;
+package com.example.tdycamera.apicamera;
 
 import android.annotation.TargetApi;
 import android.content.Context;

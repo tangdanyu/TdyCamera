@@ -19,7 +19,6 @@ import com.example.tdycamera.R;
 
 import com.example.tdycamera.base.AspectRatio;
 import com.example.tdycamera.view.AspectRatioFragment;
-import com.example.tdycamera.view.CameraView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;

@@ -1,0 +1,135 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory app:title="UI显示">
+
+        <SwitchPreferenceCompat
+            app:key="mnn"
+            app:title="是否绘制人脸特征点" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="相机参数">
+
+        <Preference
+            app:key="isAutoExposureLockSupported"
+            app:title="是否支持自动曝光锁定" />
+        <SwitchPreferenceCompat
+            app:dependency="isAutoExposureLockSupported"
+            app:key="setAutoExposureLock"
+            app:title="设置自动曝光锁定状态"
+            app:summaryOff="不锁定"
+            app:summaryOn="锁定"
+           />
+
+        <Preference
+            app:key="isAutoWhiteBalanceLockSupported"
+            app:title="是否支持自动白平衡锁定" />
+        <SwitchPreferenceCompat
+            app:dependency="isAutoWhiteBalanceLockSupported"
+            app:key="setAutoWhiteBalanceLock"
+            app:title="设置自动白平衡锁定状态"
+            app:summaryOff="不锁定"
+            app:summaryOn="锁定"
+        />
+
+
+        <ListPreference
+            app:key="setColorEffect"
+            app:title="设置当前的色彩效果" />
+
+        <ListPreference
+            app:key="setExposureCompensation"
+            app:title="设置相机曝光补偿指数" />
+
+        <ListPreference
+            app:key="setFlashMode"
+            app:title="设置闪光模式" />
+
+        <Preference
+            app:key="FocusAreas"
+            app:title="设置重点领域" />
+
+        <ListPreference
+            app:key="setFocusMode"
+            app:title="设置对焦模式" />
+
+        <SeekBarPreference
+            app:key="JpegQuality"
+            app:title="设置拍摄图片的Jpeg质量"
+            />
+        <SeekBarPreference
+            app:key="JpegThumbnailQuality"
+            app:title="设置Jpeg图片中EXIF缩略图的质量"
+            />
+        <Preference
+            app:key="GpsAltitude"
+            app:title="设置GPS高度" />
+        <Preference
+            app:key="GpsLatitude"
+            app:title="设置GPS纬度坐标" />
+        <Preference
+            app:key="GpsLongitude"
+            app:title="设置GPS经度坐标" />
+        <Preference
+            app:key="GpsProcessingMethod"
+            app:title="设置GPS处理方法" />
+        <Preference
+            app:key="GpsTimestamp"
+            app:title="设置GPS时间戳" />
+        <Preference
+            app:key="JpegQuality"
+            app:title="设置拍摄图片的Jpeg质量" />
+
+        <Preference
+            app:key="JpegThumbnailQuality"
+            app:title="设置Jpeg图片中EXIF缩略图的质量" />
+        <Preference
+            app:key="JpegThumbnailSize"
+            app:title="设置Jpeg图片中EXIF缩略图的尺寸" />
+        <Preference
+            app:key="MeteringAreas"
+            app:title="设置测光区域" />
+        <ListPreference
+            app:key="PictureFormat"
+            app:title="设置图片的图像格式"
+            />
+        <ListPreference
+            app:key="PictureFormat"
+            app:title="设置图片的尺寸"
+            />
+        <Preference
+            app:key="PreviewFormat"
+            app:title="设置预览图片的图像格式" />
+        <Preference
+            app:key="PreviewFpsRange"
+            app:title="设置最小和最大预览fps" />
+        <Preference
+            app:key="MeteringAreas"
+            app:title="设置接收预览帧的速率" />
+        <Preference
+            app:key="PreviewFrameRate"
+            app:title="设置测光区域" />
+        <Preference
+            app:key="PreviewSize"
+            app:title="设置预览图片的尺寸" />
+        <Preference
+            app:key="RecordingHint"
+            app:title="设置录制模式" />
+        <Preference
+            app:key="Rotation"
+            app:title="设置相对于相机方向的顺时针旋转角度" />
+        <Preference
+            app:key="SceneMode"
+            app:title="设置场景模式" />
+        <Preference
+            app:key="VideoStabilization"
+            app:title="启用和禁用视频稳定" />
+        <Preference
+            app:key="WhiteBalance"
+            app:title="设置白平衡" />
+        <Preference
+            app:key="Zoom"
+            app:title="设置当前缩放值" />
+    </PreferenceCategory>
+</PreferenceScreen>
