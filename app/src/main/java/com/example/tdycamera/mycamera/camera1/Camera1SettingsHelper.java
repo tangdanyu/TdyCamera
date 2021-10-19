@@ -16,7 +16,7 @@ public class Camera1SettingsHelper {
     private Camera1Helper camera1Helper;
 
     public Camera1SettingsHelper(Context context) {
-        camera1Helper =  Camera1Helper.getInstance(context, null, null);
+        camera1Helper = Camera1Helper.getInstance(context, null, null);
         camera1Helper.onResume();
         this.mCamera = camera1Helper.getCamera();
     }
@@ -176,14 +176,6 @@ public class Camera1SettingsHelper {
         return null;
     }
 
-    //获得支持的闪光模式
-    public List<String> getSupportedFlashModes() {
-        if (mCamera != null) {
-            Camera.Parameters parameters = mCamera.getParameters();
-            return parameters.getSupportedFlashModes();
-        }
-        return null;
-    }
     //设置闪光模式
     public synchronized void setFlashMode(String flash) {
         if (mCamera != null) {
@@ -201,7 +193,7 @@ public class Camera1SettingsHelper {
                     parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
                     break;
                 }
-                case Camera.Parameters.FLASH_MODE_RED_EYE:{
+                case Camera.Parameters.FLASH_MODE_RED_EYE: {
                     parameters.setFlashMode(Camera.Parameters.FLASH_MODE_RED_EYE);
                     break;
                 }
@@ -219,6 +211,15 @@ public class Camera1SettingsHelper {
                 // ignore failures for minor parameters like this for now
             }
         }
+    }
+
+    //获得支持的闪光模式
+    public List<String> getSupportedFlashModes() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            return parameters.getSupportedFlashModes();
+        }
+        return null;
     }
 
     //获取支持的最大焦点区域数
@@ -250,6 +251,28 @@ public class Camera1SettingsHelper {
                 // ignore failures for minor parameters like this for now
             }
         }
+    }
+
+    //对焦模式
+    public synchronized List<String> getSupportedFocusModes() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            List<String> getSupportedFocusModes = parameters.getSupportedFocusModes();
+            for (int i = 0; i < getSupportedFocusModes.size(); i++) {
+                MyLogUtil.e(TAG, "相机参数 支持的对焦模式列表 " + getSupportedFocusModes.get(i));
+            }
+            return getSupportedFocusModes;
+        }
+        return null;
+    }
+
+    //当前对焦模式
+    public synchronized String getFocusMode() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            return parameters.getFocusMode();
+        }
+        return null;
     }
 
     //设置对焦模式
@@ -293,26 +316,6 @@ public class Camera1SettingsHelper {
         }
     }
 
-    //对焦模式
-    public synchronized List<String> getSupportedFocusModes() {
-        if (mCamera != null) {
-            Camera.Parameters parameters = mCamera.getParameters();
-            List<String> getSupportedFocusModes = parameters.getSupportedFocusModes();
-            for (int i = 0; i < getSupportedFocusModes.size(); i++) {
-                MyLogUtil.e(TAG, "相机参数 支持的对焦模式列表 " + getSupportedFocusModes.get(i));
-            }
-            return getSupportedFocusModes;
-        }
-        return null;
-    }
-    //当前对焦模式
-    public synchronized String getFocusMode() {
-        if (mCamera != null) {
-            Camera.Parameters parameters = mCamera.getParameters();
-            return parameters.getFocusMode();
-        }
-        return null;
-    }
     //调用一次对焦一次
     public void setAutoFocusLock(boolean isLock) {
         if (mCamera != null) {
@@ -438,6 +441,19 @@ public class Camera1SettingsHelper {
         }
     }
 
+    //支持的Jpeg图片中EXIF缩略图的尺寸
+    public synchronized List<Camera.Size> getSupportedJpegThumbnailSizes() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            List<Camera.Size> getSupportedFocusModes = parameters.getSupportedJpegThumbnailSizes();
+            for (int i = 0; i < getSupportedFocusModes.size(); i++) {
+                MyLogUtil.e(TAG, "相机参数 支持的对焦模式列表 " + getSupportedFocusModes.get(i));
+            }
+            return getSupportedFocusModes;
+        }
+        return null;
+    }
+
     //获取支持的最大测光区域数
     public synchronized int getMaxNumMeteringAreas() {
         if (mCamera != null) {
@@ -485,6 +501,19 @@ public class Camera1SettingsHelper {
         }
     }
 
+    //支持的图片的图像格式
+    public synchronized List<Integer> getSupportedPictureFormats() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            List<Integer> getSupportedPictureFormats = parameters.getSupportedPictureFormats();
+            for (int i = 0; i < getSupportedPictureFormats.size(); i++) {
+                MyLogUtil.e(TAG, "相机参数 支持的对焦模式列表 " + getSupportedPictureFormats.get(i));
+            }
+            return getSupportedPictureFormats;
+        }
+        return null;
+    }
+
     //设置图片的尺寸 参考setPreviewSize(int, int)
     public void setPictureSize(int width, int height) {
         if (mCamera != null) {
@@ -498,6 +527,19 @@ public class Camera1SettingsHelper {
         }
     }
 
+    //支持的图片尺寸
+    public synchronized List<Camera.Size> getSupportedPictureSizes() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            List<Camera.Size> getSupportedPictureSizes = parameters.getSupportedPictureSizes();
+            for (int i = 0; i < getSupportedPictureSizes.size(); i++) {
+                MyLogUtil.e(TAG, "相机参数 支持的图片尺寸 " + getSupportedPictureSizes.get(i).width+"*"+getSupportedPictureSizes.get(i).height);
+            }
+            return getSupportedPictureSizes;
+        }
+        return null;
+    }
+
     //设置预览图片的图像格式 默认格式为 ImageFormat.NV21
     public void setPreviewFormat(int pixel_format) {
         if (mCamera != null) {
@@ -509,6 +551,19 @@ public class Camera1SettingsHelper {
                 // ignore failures for minor parameters like this for now
             }
         }
+    }
+
+    //支持的预览的图像格式
+    public synchronized List<Integer> getSupportedPreviewFormats() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            List<Integer> getSupportedPreviewFormats = parameters.getSupportedPreviewFormats();
+            for (int i = 0; i < getSupportedPreviewFormats.size(); i++) {
+                MyLogUtil.e(TAG, "相机参数 支持的预览的图像格式 " + getSupportedPreviewFormats.get(i));
+            }
+            return getSupportedPreviewFormats;
+        }
+        return null;
     }
 
     //设置最小和最大预览fps
@@ -531,10 +586,7 @@ public class Camera1SettingsHelper {
             List<int[]> getSupportedPreviewFpsRange = parameters.getSupportedPreviewFpsRange();
             List<String> supportedPreviewFpsRange = new ArrayList<>();
             for (int i = 0; i < getSupportedPreviewFpsRange.size(); i++) {
-                String range = "";
-                for (int j = 0; j < getSupportedPreviewFpsRange.get(i).length; j++) {
-                    range = range + getSupportedPreviewFpsRange.get(i)[j] + " ";
-                }
+                String range = getSupportedPreviewFpsRange.get(i)[0] + "*" + getSupportedPreviewFpsRange.get(i)[1];
                 supportedPreviewFpsRange.add(range);
                 MyLogUtil.e(TAG, "相机参数 支持的帧率范围列表 " + range);
             }
@@ -580,6 +632,19 @@ public class Camera1SettingsHelper {
                 // ignore failures for minor parameters like this for now
             }
         }
+    }
+
+    //支持的预览尺寸
+    public synchronized List<Camera.Size> getSupportedPreviewSizes() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            List<Camera.Size> getSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
+            for (int i = 0; i < getSupportedPreviewSizes.size(); i++) {
+                MyLogUtil.e(TAG, "相机参数 支持的预览尺寸 " + getSupportedPreviewSizes.get(i));
+            }
+            return getSupportedPreviewSizes;
+        }
+        return null;
     }
 
     //设置录制模式
@@ -630,6 +695,14 @@ public class Camera1SettingsHelper {
                 MyLogUtil.e(TAG, "相机参数 支持的场景模式列表 " + getSupportedSceneMode.get(i));
             }
             return getSupportedSceneMode;
+        }
+        return null;
+    }
+    //当前情景模式
+    public synchronized String getSceneMode(){
+        if(mCamera!=null){
+            Camera.Parameters parameters = mCamera.getParameters();
+            return parameters.getSceneMode();
         }
         return null;
     }
@@ -685,6 +758,13 @@ public class Camera1SettingsHelper {
         }
         return null;
     }
+    //当前白平衡
+    public String getWhiteBalance(){
+        if(mCamera!= null){
+            return mCamera.getParameters().getWhiteBalance();
+        }
+        return null;
+    }
 
     //设置当前缩放值
     public void setZoom(int value) {
@@ -711,4 +791,24 @@ public class Camera1SettingsHelper {
         return false;
     }
 
+    //最大缩放
+    public int getMaxZoom(){
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            return parameters.getMaxZoom();
+        }
+        return 0;
+    }
+    //支持缩放倍数
+    public List<Integer> getZoomRatios(){
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            List<Integer> getZoomRatios = parameters.getZoomRatios();
+            for (int i = 0; i < getZoomRatios.size(); i++) {
+                MyLogUtil.e(TAG, "相机参数 支持的缩放列表 " + getZoomRatios.get(i));
+            }
+            return getZoomRatios;
+        }
+        return null;
+    }
 }
