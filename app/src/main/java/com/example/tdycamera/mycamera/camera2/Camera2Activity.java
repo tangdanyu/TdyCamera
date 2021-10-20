@@ -1,6 +1,7 @@
 package com.example.tdycamera.mycamera.camera2;
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
+import android.graphics.Color;
 import android.hardware.SensorManager;
 import android.media.Image;
 import android.os.Bundle;
@@ -44,8 +45,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     //相机预览控件
     private SurfaceView surfaceView;
     private AutoFitTextureView autoFitTextureView;
-    private Button startBtn;
-    private Button stopBtn;
+    private Button recordBtn;
     private ImageView previewIv;
 
     private long lastTime = System.currentTimeMillis();
@@ -64,8 +64,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void initView() {
-        startBtn = findViewById(R.id.start_btn);
-        stopBtn = findViewById(R.id.stop_btn);
+        recordBtn = findViewById(R.id.record_btn);
         autoFitTextureView = findViewById(R.id.texture_view);
         surfaceView = findViewById(R.id.surface_view);
         previewIv = findViewById(R.id.preview_iv);
@@ -73,8 +72,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void initListener() {
-        startBtn.setOnClickListener(this);
-        stopBtn.setOnClickListener(this);
+        recordBtn.setOnClickListener(this);
         cameraListener = new CameraListener() {
             @Override
             public void onCameraOpened(int width, int height, int displayOrientation) {
@@ -84,10 +82,10 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
 //                MyLogUtil.e(TAG, "getMeasuredWidth"+autoFitTextureView.getMeasuredWidth()+"getMeasuredHeight"+autoFitTextureView.getMeasuredHeight());
                 if (displayOrientation == 0 || displayOrientation == 180) {
                     mnnDrawUtil = new MNNDrawUtil(activity,
-                            width, height, autoFitTextureView.getMeasuredWidth(), autoFitTextureView.getMeasuredHeight(), screenAutoRotate());
+                            width, height, height, width, screenAutoRotate());
                 } else {
                     mnnDrawUtil = new MNNDrawUtil(activity,
-                            width, height, autoFitTextureView.getMeasuredHeight(), autoFitTextureView.getMeasuredWidth(), screenAutoRotate());
+                            width, height, width, height, screenAutoRotate());
                 }
             }
             @Override
@@ -224,11 +222,14 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.start_btn:
-                camera2Helper.startRecord();
-                break;
-            case R.id.stop_btn:
-                camera2Helper.stopRecord();
+            case R.id.record_btn:
+                if(camera2Helper.isRecording()){
+                    recordBtn.setText("开始录制");
+                    camera2Helper.stopRecord();
+                }else {
+                    recordBtn.setText("结束录制");
+                    camera2Helper.startRecord();
+                }
                 break;
         }
     }
