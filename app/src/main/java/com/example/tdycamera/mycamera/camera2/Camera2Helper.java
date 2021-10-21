@@ -103,9 +103,8 @@ public class Camera2Helper {
         return isFrontCamera;
     }
 
-    //SurfaceTexture监听器
-    private final TextureView.SurfaceTextureListener mSurfaceTextureListener
-            = new TextureView.SurfaceTextureListener() {
+    //SurfaceTexture与相机关联
+    private TextureView.SurfaceTextureListener mSurfaceTextureListener = new TextureView.SurfaceTextureListener() {
 
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture texture, int width, int height) {

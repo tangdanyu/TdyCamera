@@ -47,6 +47,8 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
 
     private Button switchCameraBtn;
     private Button settingBtn;
+    private Button takePictureBtn;
+    private Button recordBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +69,15 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
         previewIv = findViewById(R.id.preview_iv);
         switchCameraBtn = findViewById(R.id.switch_camera_btn);
         settingBtn = findViewById(R.id.setting_btn);
+        takePictureBtn = findViewById(R.id.take_picture_btn);
+        recordBtn = findViewById(R.id.record_btn);
     }
 
     private void initListener() {
         switchCameraBtn.setOnClickListener(this);
         settingBtn.setOnClickListener(this);
+        takePictureBtn.setOnClickListener(this);
+        recordBtn.setOnClickListener(this);
         cameraListener = new CameraListener() {
             @Override
             public void onCameraOpened(int width, int height, int displayOrientation) {
@@ -212,6 +218,23 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
             case R.id.setting_btn:
                 startActivity(new Intent(getBaseContext(), Camera1SettingsActivity.class));
                 break;
+            case R.id.take_picture_btn:
+                if(camera1Helper!= null) {
+                    camera1Helper.takePicture();
+                }
+                break;
+            case R.id.record_btn:
+                if(camera1Helper!= null) {
+                    if (camera1Helper.isRecording()) {
+                        recordBtn.setText("开始录制");
+                        camera1Helper.stopRecord();
+                    } else {
+                        recordBtn.setText("结束录制");
+                        camera1Helper.startRecord();
+                    }
+                }
+                break;
+
         }
     }
 }

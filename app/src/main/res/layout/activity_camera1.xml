@@ -31,22 +31,22 @@
         android:layout_gravity="top|right"
         android:text="设置"
         />
-
     <Button
-        android:id="@+id/start_btn"
+        android:id="@+id/take_picture_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|left"
-        android:text="开始"
-        android:visibility="gone" />
+        android:text="拍照"
+        />
 
     <Button
-        android:id="@+id/stop_btn"
+        android:id="@+id/record_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
-        android:text="结束"
-        android:visibility="gone" />
+        android:text="录像"
+        />
+
 </FrameLayout>
 
 
