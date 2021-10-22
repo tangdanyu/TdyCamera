@@ -2,7 +2,6 @@ package com.example.tdycamera.mycamera.camera1;
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.content.Intent;
-import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -19,7 +18,7 @@ import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mnn.MNNDrawUtil;
 import com.example.tdycamera.mnn.MNNFaceDetectListener;
 import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
-import com.example.tdycamera.phonecamera.PhoneCameraActivity;
+import com.example.tdycamera.utils.MyLogUtil;
 import com.example.tdycamera.view.AutoFitTextureView;
 import com.example.tdycamera.utils.ImageUtil;
 
@@ -93,7 +92,6 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                             width, height, width, height, screenAutoRotate());
                 }
             }
-
             @Override
             public void onCameraClosed() {
 
@@ -101,7 +99,7 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
 
             @Override
             public void onCameraPreview(byte[] data, int width, int height, int displayOrientation) {
-//                MyLogUtil.e(TAG,"onCameraPreview width "+width+" height "+height+ " displayOrientation"+displayOrientation);
+//                MyLogUtil.e(TAG,"时间"+(System.currentTimeMillis() - lastTime)+" width"+width+" height"+height+" Orientation"+displayOrientation);//width1920 height960 Orientation270
                 lastTime = System.currentTimeMillis();
                 if (width <= 0 || height <= 0) {
                     return;
@@ -121,7 +119,7 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                 if (!screenAutoRotate()) {
                     outAngle = camera1Helper.isFrontCamera() ? (360 - mRotateDegree) % 360 : mRotateDegree % 360;
                 }
-//                MyLogUtil.e(TAG,"MNN"+" data"+data.length+" inAngle"+inAngle+" outAngle"+outAngle);
+//                MyLogUtil.e(TAG,"MNN"+" data="+data.length+" displayOrientation="+displayOrientation+" inAngle="+inAngle+" outAngle="+outAngle);//data=2764800 displayOrientation=270 inAngle=270 outAngle=0
                 FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height, 1, inAngle, outAngle, true);
                 if (results != null) {
                     mnnDrawUtil.drawResult(displayOrientation, mRotateDegree, results);
@@ -194,19 +192,6 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
-    // 系统是否开启自动旋转
-    protected boolean screenAutoRotate() {
-
-        boolean autoRotate = false;
-        try {
-            autoRotate = 1 == Settings.System.getInt(getContentResolver(), Settings.System.ACCELEROMETER_ROTATION);
-        } catch (Settings.SettingNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return autoRotate;
-    }
-
     @Override
     public void onClick(View view) {
         switch (view.getId()){
@@ -234,7 +219,19 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                     }
                 }
                 break;
-
         }
+    }
+
+    // 系统是否开启自动旋转
+    protected boolean screenAutoRotate() {
+
+        boolean autoRotate = false;
+        try {
+            autoRotate = 1 == Settings.System.getInt(getContentResolver(), Settings.System.ACCELEROMETER_ROTATION);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return autoRotate;
     }
 }

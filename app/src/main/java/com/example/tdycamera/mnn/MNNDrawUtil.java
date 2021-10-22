@@ -59,7 +59,7 @@ public class MNNDrawUtil {
         surfaceHolder.setFixedSize(width, height);
         // 点序
         mOrderSwitch = activity.findViewById(R.id.swPointOrder);
-        mTimeCost = activity.findViewById(R.id.costTime);
+//        mTimeCost = activity.findViewById(R.id.costTime);
         mFaceAction = activity.findViewById(R.id.faceAction);
         mYPR = activity.findViewById(R.id.ypr);
         this.width = width;

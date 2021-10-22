@@ -1,7 +1,7 @@
 package com.example.tdycamera.mycamera.camera2;
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
-import android.graphics.Color;
+import android.content.Intent;
 import android.hardware.SensorManager;
 import android.media.Image;
 import android.os.Bundle;
@@ -23,7 +23,6 @@ import com.example.tdycamera.view.AutoFitTextureView;
 
 import android.widget.Button;
 import android.view.View;
-import android.graphics.Bitmap;
 
 import java.nio.ByteBuffer;
 
@@ -31,12 +30,13 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     private String TAG = "Camera2Activity";
 
     /****阿里Mnn相关*****/
-    private int mRotateDegree; // 屏幕旋转角度：0/90/180/270
-    private OrientationEventListener orientationListener;       // 监听屏幕旋转
     private MNNFaceDetectorAdapter mnnFaceDetectorAdapter;  //阿里人脸识别工具类
     private MNNFaceDetectListener mnnFaceDetectListener;    //阿里人脸识别
     private MNNDrawUtil mnnDrawUtil;//特征点的绘制
     private Activity activity;
+
+    private int mRotateDegree; // 屏幕旋转角度：0/90/180/270
+    private OrientationEventListener orientationListener;       // 监听屏幕旋转
 
     //相机控制
     private Camera2Helper camera2Helper;
@@ -45,10 +45,14 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     //相机预览控件
     private SurfaceView surfaceView;
     private AutoFitTextureView autoFitTextureView;
-    private Button recordBtn;
     private ImageView previewIv;
 
     private long lastTime = System.currentTimeMillis();
+
+    private Button switchCameraBtn;
+    private Button settingBtn;
+    private Button takePictureBtn;
+    private Button recordBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,14 +68,19 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void initView() {
-        recordBtn = findViewById(R.id.record_btn);
         autoFitTextureView = findViewById(R.id.texture_view);
         surfaceView = findViewById(R.id.surface_view);
         previewIv = findViewById(R.id.preview_iv);
-
+        switchCameraBtn = findViewById(R.id.switch_camera_btn);
+        settingBtn = findViewById(R.id.setting_btn);
+        takePictureBtn = findViewById(R.id.take_picture_btn);
+        recordBtn = findViewById(R.id.record_btn);
     }
 
     private void initListener() {
+        switchCameraBtn.setOnClickListener(this);
+        settingBtn.setOnClickListener(this);
+        takePictureBtn.setOnClickListener(this);
         recordBtn.setOnClickListener(this);
         cameraListener = new CameraListener() {
             @Override
@@ -126,7 +135,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
 
             @Override
             public void onCameraPreview(byte[] data, int width, int height, int displayOrientation) {
-//                MyLogUtil.e(TAG,"时间"+(System.currentTimeMillis() - lastTime)+" width"+width+" height"+height+" Orientation"+displayOrientation);
+//                MyLogUtil.e(TAG,"时间"+(System.currentTimeMillis() - lastTime)+" width"+width+" height"+height+" Orientation"+displayOrientation);//width1920 height960 Orientation270
                 lastTime = System.currentTimeMillis();
                 if (width <= 0 || height <= 0) {
                     return;
@@ -146,7 +155,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
                 if (!screenAutoRotate()) {
                     outAngle = camera2Helper.isFrontCamera() ? (360 - mRotateDegree) % 360 : mRotateDegree % 360;
                 }
-//                MyLogUtil.e(TAG,"MNN"+" data"+data.length+" inAngle"+inAngle+" outAngle"+outAngle);
+//                MyLogUtil.e(TAG,"MNN"+" data="+data.length+" displayOrientation="+displayOrientation+" inAngle="+inAngle+" outAngle="+outAngle);//data=2764800 displayOrientation=270 inAngle=270 outAngle=0
                 FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height, 1, inAngle, outAngle, true);
                 if (results != null) {
                     mnnDrawUtil.drawResult(displayOrientation, mRotateDegree, results);
@@ -222,13 +231,28 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.switch_camera_btn:
+                if(camera2Helper!= null){
+                    camera2Helper.switchCamera();
+                }
+                break;
+            case R.id.setting_btn:
+//                startActivity(new Intent(getBaseContext(), Camera1SettingsActivity.class));
+                break;
+            case R.id.take_picture_btn:
+                if(camera2Helper!= null) {
+//                    camera2Helper.takePicture();
+                }
+                break;
             case R.id.record_btn:
-                if(camera2Helper.isRecording()){
-                    recordBtn.setText("开始录制");
-                    camera2Helper.stopRecord();
-                }else {
-                    recordBtn.setText("结束录制");
-                    camera2Helper.startRecord();
+                if(camera2Helper!= null) {
+                    if (camera2Helper.isRecording()) {
+                        recordBtn.setText("开始录制");
+                        camera2Helper.stopRecord();
+                    } else {
+                        recordBtn.setText("结束录制");
+                        camera2Helper.startRecord();
+                    }
                 }
                 break;
         }
