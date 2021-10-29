@@ -241,7 +241,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.take_picture_btn:
                 if(camera2Helper!= null) {
-//                    camera2Helper.takePicture();
+                    camera2Helper.takePicture();
                 }
                 break;
             case R.id.record_btn:

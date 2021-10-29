@@ -3,6 +3,9 @@ package com.example.tdycamera.mycamera.camera2;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
@@ -11,13 +14,16 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.util.Log;
 import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
@@ -35,72 +41,56 @@ import com.example.yuvlib.YUVUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class Camera2Helper {
     private static final String TAG = "Camera2Helper";
-    private CameraManager cameraManager;//相机管理类
-    private CameraCharacteristics cameraCharacteristics;//相机特性
-
     private Context mContext;
-    private String mCameraId;                    //正在使用的相机id
-    private Size mPreviewSize;                   // 预览数据的尺寸
-    private int[] formats;//设备支持的格式
-    private int hardwareLevel;//硬件级别
-    private Range<Integer>[] fpsRanges;   // 相机的FPS范围
-    private int mSensorOrientation;//相机传感器的方向
+    private CameraManager mCameraManager;                   //相机管理类
+    private CameraDevice mCameraDevice;                     //正在使用的相机实例
+    private CameraCharacteristics mCameraCharacteristics;   //相机特性
+    private CameraCaptureSession mCameraCaptureSession;     //捕获会话
+    private ImageReader pictureImageReader;                 //图片
+    private ImageReader yuvImageReader;                     //yuv视频帧数据
+
+    private AutoFitTextureView autoFitTextureView;          // 预览使用的自定义TextureView控件
     private int facing = CameraCharacteristics.LENS_FACING_FRONT;//朝向
-    private CameraCaptureSession mCaptureSession;// 预览用的获取会话
-    private CameraDevice mCameraDevice;          // 正在使用的相机实例
+    private boolean isFrontCamera = true;                   //是否前置摄像头
+    private String mCameraId;                               //正在使用的相机id
+    private Size mPreviewSize;                              //预览数据的尺寸
+    private Size mVideoSize;                                //录制视频尺寸 尺寸不要大于1080p，因为MediaRecorder无法处理如此高分辨率的视频。
+    private Size mPictureSize;                              //照片尺寸
+    private int[] formats;                                  //设备支持的格式
+    private int hardwareLevel;                              //硬件级别
+    private Range<Integer>[] fpsRanges;                     //相机的FPS范围
+    private int mSensorOrientation;                         //相机传感器的方向
+    private int format = ImageFormat.NV21;                  //设置YUV420
 
-    private MediaRecorder mMediaRecorder;
-    private boolean isRecording = false;
-    private CaptureRequest.Builder mPreviewRequestBuilder;  // 预览请求构建器
-    private CaptureRequest mPreviewRequest;      // 预览请求, 由上面的构建器构建出来
+    private boolean isRecordVideo = true;                   // 是否录制视频
+    private MediaRecorder mMediaRecorder;                   // 尺寸不要大于1080p，因为MediaRecorder无法处理如此高分辨率的视频。
+    private boolean isRecording = false;                    //是否正在录制
+
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);  // 信号量控制器
-    private ImageReader mImageReader;            // 用于获取画面的数据，并进行识别 YUV_420_888
-    private int imageFormat = ImageFormat.YUV_420_888;
-    private int format = ImageFormat.NV21;
-
-    private AutoFitTextureView mTextureView;  // 预览使用的自定义TextureView控件
-    private boolean isFrontCamera = true;               //是否前置摄像头
-
-    private HandlerThread mBackgroundThread;     // 处理拍照等工作的子线程
-    private Handler mBackgroundHandler;          // 上面定义的子线程的处理器
-
+    private HandlerThread mBackgroundThread;     // 处理拍照等工作的子线程，不阻塞UI的附加线程。
+    private Handler mBackgroundHandler;          // 上面定义的子线程的处理器，在后台运行任务
     // Camera2 API提供的最大预览宽度和高度
     private static final int MAX_PREVIEW_WIDTH = 1920;
     private static final int MAX_PREVIEW_HEIGHT = 1080;
 
     private CameraListener mCameraListener;
-
+    private byte[] y, u, v, i420, yv12, nv21, nv12;
 
     public Camera2Helper(Context context, AutoFitTextureView mTextureView, CameraListener cameraListener) {
         this.mContext = context;
-        this.mTextureView = mTextureView;
+        this.autoFitTextureView = mTextureView;
         this.mCameraListener = cameraListener;
-        cameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
+        mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
         initMediaRecorder();
-    }
-
-    //切换相机
-    public void switchCamera() {
-        if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
-            facing = CameraCharacteristics.LENS_FACING_BACK;
-            isFrontCamera = false;
-        } else {
-            facing = CameraCharacteristics.LENS_FACING_FRONT;
-            isFrontCamera = true;
-        }
-        closeCamera();
-        openCamera();
-    }
-
-    public boolean isFrontCamera() {
-        return isFrontCamera;
     }
 
     //SurfaceTexture与相机关联
@@ -114,6 +104,7 @@ public class Camera2Helper {
 
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture texture, int width, int height) {
+            MyLogUtil.e(TAG, "onSurfaceTextureSizeChanged: width=" + width + ", height=" + height);// width=1080, height=2160
         }
 
         @Override
@@ -125,17 +116,30 @@ public class Camera2Helper {
         public void onSurfaceTextureUpdated(SurfaceTexture texture) {
         }
     };
-
+    //捕捉请求发送给相机设备进度的变化
+    private CameraCaptureSession.CaptureCallback captureCallback = new CameraCaptureSession.CaptureCallback() {
+        @Override
+        public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+            super.onCaptureCompleted(session, request, result);
+            MyLogUtil.e(TAG, "onCaptureCompleted");
+            setRepeatingRequest();
+        }
+    };
     //相机状态改变的回调函数
-    private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
+    private CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback() {
 
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
-            MyLogUtil.e(TAG, "onOpened");
+            MyLogUtil.e(TAG, "mStateCallback onOpened");
             // 当相机打开执行以下操作:
             mCameraOpenCloseLock.release();  // 1. 释放访问许可
             mCameraDevice = cameraDevice;   // 2. 将正在使用的相机指向将打开的相机
-            createPreviewAndRecordAndImageReaderSession();   // 3. 创建相机预览会话
+            if (isRecordVideo) {
+                createPreviewAndRecordAndImageReaderSession(); // 3. 创建相机预览会话
+            } else {
+                createPreviewAndImageReaderSession();
+            }
+
         }
 
         @Override
@@ -159,18 +163,17 @@ public class Camera2Helper {
     };
 
     //ImageReader的回调函数 获得yuv数据
-    private final ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
-        private byte[] y;
-        private byte[] u;
-        private byte[] v;
-        private byte[] i420;
-        private byte[] yv12;
-        private byte[] nv21;
-        private byte[] nv12;
-
+    private ImageReader.OnImageAvailableListener yuvImageAvailableListener = new ImageReader.OnImageAvailableListener() {
         private long lastImageTime = System.currentTimeMillis();
+
         @Override
         public void onImageAvailable(ImageReader reader) {
+            mBackgroundHandler.post(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            });
             //获取最新的一帧的Image
             Image image = reader.acquireLatestImage();
             if (image.getFormat() == ImageFormat.YUV_420_888) {
@@ -178,7 +181,7 @@ public class Camera2Helper {
 //                MyLogUtil.e(TAG, "height: " + image.getHeight());//1080
 //                MyLogUtil.e(TAG, "format: " + image.getFormat());//ImageFormat.YUV_420_888 =35
 //                MyLogUtil.e(TAG, "timeStamp: " +( image.getTimestamp()/1000000 -last));//时间戳
-                lastImageTime = image.getTimestamp()/1000000;//33
+                lastImageTime = image.getTimestamp() / 1000000;//33
                 if (nv21 == null) {
                     nv21 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
                     nv12 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
@@ -259,103 +262,153 @@ public class Camera2Helper {
             image.close(); // 这里一定要close，不然预览会卡死,否则不会收到新的Image回调。
         }
     };
+    //拍照生成的帧
+    private ImageReader.OnImageAvailableListener pictureImageAvailableListener = new ImageReader.OnImageAvailableListener() {
+        @Override
+        public void onImageAvailable(ImageReader imageReader) {
+            //获取最新的一帧的Image
+            Image image = imageReader.acquireLatestImage();
+            //因为是ImageFormat.JPEG格式，所以 image.getPlanes()返回的数组只有一个，也就是第0个。
+            ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
+            byte[] bytes = new byte[byteBuffer.remaining()];
+            byteBuffer.get(bytes);
+            //ImageFormat.JPEG格式直接转化为Bitmap格式。
+            Bitmap temp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            //因为摄像机数据默认是横的，所以需要旋转90度。
 
+            //抛出去展示或存储。
+
+            //一定需要close，否则不会收到新的Image回调。
+            image.close();
+        }
+    };
     //一个会话的创建需要比较长的时间，当创建成功后就会执行onConfigured回调
     private CameraCaptureSession.StateCallback previewStateCallback = new CameraCaptureSession.StateCallback() {
         @Override
         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
-            // 相机关闭时, 直接返回
-            if (null == mCameraDevice) {
+            if (null == mCameraDevice) {   // 相机关闭时, 直接返回
                 return;
             }
-
-            // 会话可行时, 将构建的会话赋给mCaptureSession
-            mCaptureSession = cameraCaptureSession;
-            try {
-                // 自动对焦
-                //在该模式中，AF算法连续地修改镜头位置以尝试提供恒定对焦的图像流。
-                //聚焦行为应适合静止图像采集; 通常这意味着尽可能快地聚焦。
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                // 自动闪光：与ON一样，除了相机设备还控制相机的闪光灯组件，在低光照条件下启动它
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-
-                // 设置预览帧率为最高，似乎fpsRanges[fpsRanges.length-1]一般就是手机相机能支持的最大帧率，一般也就是[30,30]
-                // 至少在mi 8和华为p30 pro上是这样
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRanges[fpsRanges.length - 1]);
-
-                // 构建上述的请求
-                //(CaptureRequest mPreviewRequest是请求捕获参数的集合，包括连续捕获的频率等)
-                mPreviewRequest = mPreviewRequestBuilder.build();
-                // 重复进行上面构建的请求, 以便显示预览
-                mCaptureSession.setRepeatingRequest(mPreviewRequest, null, mBackgroundHandler);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
+            MyLogUtil.e(TAG, "previewStateCallback onConfigured");
+            mCameraCaptureSession = cameraCaptureSession;//获得CameraCaptureSession实例
+            setRepeatingRequest();
         }
 
         @Override
         public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-            MyLogUtil.e(TAG, "createCaptureSession Failed");
+            MyLogUtil.e(TAG, "onConfigureFailed");
         }
     };
+
     private CameraCaptureSession.StateCallback reRecordStateCallback = new CameraCaptureSession.StateCallback() {
         @Override
         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
-            // 相机关闭时, 直接返回
             if (null == mCameraDevice) {
                 return;
             }
-
-            // 会话可行时, 将构建的会话赋给mCaptureSession
-            mCaptureSession = cameraCaptureSession;
-            try {
-                // 自动对焦
-                //在该模式中，AF算法连续地修改镜头位置以尝试提供恒定对焦的图像流。
-                //聚焦行为应适合静止图像采集; 通常这意味着尽可能快地聚焦。
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-                // 自动闪光：与ON一样，除了相机设备还控制相机的闪光灯组件，在低光照条件下启动它
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                        CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-
-                // 设置预览帧率为最高，似乎fpsRanges[fpsRanges.length-1]一般就是手机相机能支持的最大帧率，一般也就是[30,30]
-                // 至少在mi 8和华为p30 pro上是这样
-                mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRanges[fpsRanges.length - 1]);
-
-                // 构建上述的请求
-                //(CaptureRequest mPreviewRequest是请求捕获参数的集合，包括连续捕获的频率等)
-                mPreviewRequest = mPreviewRequestBuilder.build();
-                // 重复进行上面构建的请求, 以便显示预览
-                mCaptureSession.setRepeatingRequest(mPreviewRequest,
-                        null, mBackgroundHandler);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
+            MyLogUtil.e(TAG, "reRecordStateCallback onConfigured");
+            mCameraCaptureSession = cameraCaptureSession;
+            setRepeatingRequest();
         }
 
         @Override
         public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-            MyLogUtil.e(TAG, "createCaptureSession Failed");
+            MyLogUtil.e(TAG, "onConfigureFailed");
         }
     };
+
+    //重复请求获取图像数据，常用于预览或连拍
+    private void setRepeatingRequest() {
+        MyLogUtil.e(TAG, "setRepeatingRequest");
+        try {
+            SurfaceTexture texture = autoFitTextureView.getSurfaceTexture();
+            assert texture != null;
+            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());  // 设置宽度和高度
+            Surface previewSurface = new Surface(texture);  // 用获取输出surface
+
+            //预览参数设置
+            int template = CameraDevice.TEMPLATE_PREVIEW;
+            if (isRecordVideo) {
+                template = CameraDevice.TEMPLATE_RECORD;
+            }
+            CaptureRequest.Builder previewBuilder = mCameraDevice.createCaptureRequest(template);
+            previewBuilder.addTarget(previewSurface);
+            previewBuilder.addTarget(yuvImageReader.getSurface());
+            if(isRecordVideo){
+                Surface recorderSurface = mMediaRecorder.getSurface();//从获取录制视频需要的Surface
+                previewBuilder.addTarget(recorderSurface);
+            }
+
+            mCameraCaptureSession.setRepeatingRequest(previewBuilder.build(), null, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //创建预览 + ImageReader
+    private void createPreviewAndImageReaderSession() {
+        MyLogUtil.e(TAG, "创建预览 + ImageReader");
+        try {
+            // 输入相机的尺寸必须是相机支持的尺寸，这样画面才能不失真，TextureView输入相机的尺寸也是这个
+            yuvImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), ImageFormat.YUV_420_888, /*maxImages*/1);
+            yuvImageReader.setOnImageAvailableListener(yuvImageAvailableListener, mBackgroundHandler);   // 设置监听和后台线程处理器
+            // 获取用来预览的texture实例
+            SurfaceTexture texture = autoFitTextureView.getSurfaceTexture();
+            assert texture != null;
+            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());  // 设置宽度和高度
+            Surface previewSurface = new Surface(texture);  // 用获取输出surface
+            //预览参数设置
+            List<Surface> surfaceList = new ArrayList<>();
+            surfaceList.add(previewSurface);
+            surfaceList.add(yuvImageReader.getSurface());
+            // 创建预览的捕获会话
+            mCameraDevice.createCaptureSession(surfaceList, previewStateCallback, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //预览+录制+ImageReader
+    private void createPreviewAndRecordAndImageReaderSession() {
+        MyLogUtil.e(TAG, "预览+录制+ImageReader");
+        // 输入相机的尺寸必须是相机支持的尺寸，这样画面才能不失真，TextureView输入相机的尺寸也是这个
+        yuvImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), ImageFormat.YUV_420_888, /*maxImages*/1);
+        yuvImageReader.setOnImageAvailableListener(yuvImageAvailableListener, mBackgroundHandler);// 设置监听和后台线程处理器
+        setMediaRecorderConfig(mVideoSize.getWidth(), mVideoSize.getHeight(), mSensorOrientation);
+        try {
+            // 获取用来预览的texture实例
+            SurfaceTexture texture = autoFitTextureView.getSurfaceTexture();
+            assert texture != null;
+            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());  // 设置宽度和高度
+            Surface previewSurface = new Surface(texture);  // 用获取输出surface
+//            Surface recorderSurface = mMediaRecorder.getSurface();//从获取录制视频需要的Surface
+            //预览参数设置
+            List<Surface> surfaceList = new ArrayList<>();
+            surfaceList.add(previewSurface);
+            surfaceList.add(yuvImageReader.getSurface());
+//            surfaceList.add(recorderSurface);
+            // 创建录制的捕获会话
+            mCameraDevice.createCaptureSession(surfaceList, reRecordStateCallback, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void onResume() {
         MyLogUtil.e(TAG, "onResume");
         startBackgroundThread();
         // 当屏幕关闭后重新打开, 若SurfaceTexture已经就绪, 此时onSurfaceTextureAvailable不会被回调, 这种情况下
         // 如果SurfaceTexture已经就绪, 则直接打开相机, 否则等待SurfaceTexture已经就绪的回调
-        if (mTextureView.isAvailable()) {
+        if (autoFitTextureView.isAvailable()) {
             openCamera();
         } else {
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+            autoFitTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         }
 
     }
 
     public void onPause() {
-        MyLogUtil.e(TAG, "onPause: ");
+        MyLogUtil.e(TAG, "onPause");
         closeCamera();
         stopBackgroundThread();
     }
@@ -366,35 +419,47 @@ public class Camera2Helper {
 
     //设置相机的输出, 以支持全屏预览
     private void getCamera(int facing) {
+        MyLogUtil.e(TAG, "getCamera");
         try {
             // 遍历设备的所有摄像头
-            if (cameraManager != null) {
-                for (String cameraId : cameraManager.getCameraIdList()) {
-                    cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
+            if (mCameraManager != null) {
+                for (String cameraId : mCameraManager.getCameraIdList()) {
+                    mCameraCharacteristics = mCameraManager.getCameraCharacteristics(cameraId);
                     // 设置默认打开前置摄像头
-                    Integer lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
+                    Integer lensFacing = mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
                     if (lensFacing != null && lensFacing != facing) {
                         continue;
                     }
                     // 相机设备支持的所有输出格式（以及相应格式的大小尺寸）的列表。
-                    StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                    StreamConfigurationMap map = mCameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
                     if (map == null) {
                         continue;
                     }
                     //此相机设备支持的帧速率范围列表。
-                    fpsRanges = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+                    fpsRanges = mCameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
                     //输出图像需要旋转的顺时针角度
-                    mSensorOrientation = cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+                    mSensorOrientation = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
 
                     //硬件级别
-                    hardwareLevel = cameraCharacteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+                    hardwareLevel = mCameraCharacteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
                     //计算出最适合的预览尺寸（实际从相机得到的尺寸）
                     //map.getOutputSizes(SurfaceTexture.class)表示SurfaceTexture支持的尺寸List
                     mPreviewSize = getPreviewSize(map.getOutputSizes(SurfaceTexture.class));
+                    mVideoSize = getPreviewSize(map.getOutputSizes(MediaRecorder.class));
+                    if(mVideoSize.getWidth()>MAX_PREVIEW_HEIGHT || mVideoSize.getHeight()>MAX_PREVIEW_WIDTH){
+                        mVideoSize = new Size(MAX_PREVIEW_WIDTH,MAX_PREVIEW_HEIGHT);
+                    }
+                    mPictureSize = getPreviewSize(map.getOutputSizes(ImageReader.class));
                     formats = map.getOutputFormats();
 
                     //预览控件的宽高
-                    mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
+                    int orientation = mContext.getResources().getConfiguration().orientation;
+                    if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        autoFitTextureView.setAspectRatio(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+                    } else {
+                        autoFitTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
+                    }
+
                     mCameraId = cameraId;   // 获得当前相机的Id
 
                     MyLogUtil.e(TAG, "相机信息: 朝向facing = " + facing);//0 前置
@@ -403,6 +468,7 @@ public class Camera2Helper {
                     MyLogUtil.e(TAG, "相机信息: 帧速率fpsRanges = " + Arrays.toString(fpsRanges));//[[12, 15], [15, 15], [14, 20], [20, 20], [14, 25], [25, 25], [14, 30], [30, 30]]
                     MyLogUtil.e(TAG, "相机信息: 相机方向mOrientation = " + mSensorOrientation);//270
                     MyLogUtil.e(TAG, "相机信息：预览宽高mPreviewSize = " + mPreviewSize.getWidth() + "*" + mPreviewSize.getHeight());  // 1280*960
+                    MyLogUtil.e(TAG, "相机信息：视频宽高mVideoSize = " + mVideoSize.getWidth() + "*" + mVideoSize.getHeight());  // 1280*960
                     MyLogUtil.e(TAG, "相机信息：尺寸列表getOutputSizes = " + Arrays.toString(map.getOutputSizes(SurfaceTexture.class)));  // [4160x3120, 4160x2336, 3264x2448, 3120x3120, 1920x1080, 1920x960, 1440x1080, 1440x720, 1280x960, 1280x720, 960x720, 720x720, 640x480, 320x240, 352x288, 208x144, 176x144]
                     MyLogUtil.e(TAG, "相机信息：mCameraId = " + mCameraId);  // 1
                     MyLogUtil.e(TAG, "相机信息：预览宽高 = " + mPreviewSize.getHeight() + "*" + mPreviewSize.getWidth());  // 960*1280
@@ -423,13 +489,36 @@ public class Camera2Helper {
 
     //计算出最适合全屏预览的尺寸
     private Size getPreviewSize(Size[] choices) {
-
+        MyLogUtil.e(TAG, "getPreviewSize");
         // 获取当前的屏幕尺寸, 放到一个点对象里
         Point screenSize = new Point();
         ((WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getSize(screenSize);
+        int screenWidth = screenSize.x;  // 1080
+        int screenHeight = screenSize.y; // 2160
 
-        int screenWidth = screenSize.y;  // 2160
-        int screenHeight = screenSize.x; // 1080
+        int displayRotation = ((WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
+        boolean swappedDimensions = false;
+        switch (displayRotation) {
+            case Surface.ROTATION_0:
+            case Surface.ROTATION_180:
+                if (mSensorOrientation == 90 || mSensorOrientation == 270) {
+                    swappedDimensions = true;
+                }
+                break;
+            case Surface.ROTATION_90:
+            case Surface.ROTATION_270:
+                if (mSensorOrientation == 0 || mSensorOrientation == 180) {
+                    swappedDimensions = true;
+                }
+                break;
+            default:
+                Log.e(TAG, "Display rotation is invalid: " + displayRotation);
+        }
+        if (swappedDimensions) {
+            screenWidth = screenSize.y;
+            screenHeight = screenSize.x;
+        }
+
         MyLogUtil.e(TAG, "屏幕宽高 (x,y) x=" + screenSize.x + " y=" + screenSize.y); // x=1080 y=2160
 
         Size chooseSize = null;
@@ -465,13 +554,9 @@ public class Camera2Helper {
 
     }
 
-    /**
-     * 打开相机
-     * 1. 获取相机权限
-     * 2. 根据相机特性选取合适的Camera
-     * 3. 通过CameraManager打开选择的相机
-     */
+    //打开相机
     private void openCamera() {
+        MyLogUtil.e(TAG, "openCamera");
         if (ContextCompat.checkSelfPermission(Objects.requireNonNull(mContext), Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -485,8 +570,8 @@ public class Camera2Helper {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
             }
             // 打开相机, 参数是: 相机id, 相机状态回调, 子线程处理器
-            if (cameraManager != null) {
-                cameraManager.openCamera(mCameraId, mStateCallback, mBackgroundHandler);
+            if (mCameraManager != null) {
+                mCameraManager.openCamera(mCameraId, mStateCallback, mBackgroundHandler);
             }
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -495,102 +580,26 @@ public class Camera2Helper {
         }
     }
 
-    //创建预览 + ImageReader
-    private void createPreviewAndImageReaderSession() {
-        try {
-            if(mCaptureSession!= null){
-                mCaptureSession.stopRepeating();//停止预览，准备切换到录制视频
-                mCaptureSession.close();//关闭预览的会话，需要重新创建录制视频的会话
-                mCaptureSession = null;
-            }
-            if(mImageReader!= null){
-                mImageReader.close();//关闭预览的会话，需要重新创建录制视频的会话
-                mImageReader = null;
-            }
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-        try {
-            // 输入相机的尺寸必须是相机支持的尺寸，这样画面才能不失真，TextureView输入相机的尺寸也是这个
-            mImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), imageFormat, /*maxImages*/1);
-            mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);   // 设置监听和后台线程处理器
-            // 获取用来预览的texture实例
-            SurfaceTexture texture = mTextureView.getSurfaceTexture();
-            assert texture != null;
-            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());  // 设置宽度和高度
-            Surface previewSurface = new Surface(texture);  // 用获取输出surface
-
-            // 预览请求构建(创建适合相机预览窗口的请求：CameraDevice.TEMPLATE_PREVIEW字段)
-            mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            mPreviewRequestBuilder.addTarget(previewSurface);  //请求捕获的目标surface
-            mPreviewRequestBuilder.addTarget(mImageReader.getSurface());
-
-            // 创建预览的捕获会话
-            mCameraDevice.createCaptureSession(Arrays.asList(previewSurface, mImageReader.getSurface()), previewStateCallback, mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
-    //预览+录制+ImageReader
-    private void createPreviewAndRecordAndImageReaderSession() {
-        try {
-            if(mCaptureSession!= null){
-                mCaptureSession.stopRepeating();//停止预览，准备切换到录制视频
-                mCaptureSession.close();//关闭预览的会话，需要重新创建录制视频的会话
-                mCaptureSession = null;
-            }
-            if(mImageReader!= null){
-                mImageReader.close();//关闭预览的会话，需要重新创建录制视频的会话
-                mImageReader = null;
-            }
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-        // 输入相机的尺寸必须是相机支持的尺寸，这样画面才能不失真，TextureView输入相机的尺寸也是这个
-        mImageReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), imageFormat, /*maxImages*/1);
-        mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);// 设置监听和后台线程处理器
-        setMediaRecorderConfig(mPreviewSize.getWidth(), mPreviewSize.getHeight(), mSensorOrientation);
-        try {
-            // 获取用来预览的texture实例
-            SurfaceTexture texture = mTextureView.getSurfaceTexture();
-            assert texture != null;
-            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());  // 设置宽度和高度
-            Surface previewSurface = new Surface(texture);  // 用获取输出surface
-            Surface recorderSurface = mMediaRecorder.getSurface();//从获取录制视频需要的Surface
-            // 预览请求构建(创建适合相机录制视频的请求：CameraDevice.TEMPLATE_RECORD字段)
-            mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            mPreviewRequestBuilder.addTarget(previewSurface);  //请求捕获的目标surface
-            mPreviewRequestBuilder.addTarget(mImageReader.getSurface());
-            mPreviewRequestBuilder.addTarget(recorderSurface);
-            // 创建录制的捕获会话
-            mCameraDevice.createCaptureSession(Arrays.asList(previewSurface, mImageReader.getSurface(), recorderSurface), reRecordStateCallback, mBackgroundHandler
-            );
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
     //关闭正在使用的相机
     private void closeCamera() {
+        MyLogUtil.e(TAG, "closeCamera");
         try {
             // 获得相机开打关闭许可
             mCameraOpenCloseLock.acquire();
             // 关闭捕获会话
-            if (mCaptureSession != null) {
-                mCaptureSession.close();
-                mCaptureSession = null;
+            if (mCameraCaptureSession != null) {
+                mCameraCaptureSession.close();
+                mCameraCaptureSession = null;
             }
             // 关闭当前相机
             if (mCameraDevice != null) {
                 mCameraDevice.close();
                 mCameraDevice = null;
             }
-            // 关闭拍照处理器
-            if (mImageReader != null) {
-                mImageReader.close();
-                mImageReader = null;
+
+            if (mMediaRecorder != null) {
+                mMediaRecorder.release();
+                mMediaRecorder = null;
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
@@ -621,10 +630,14 @@ public class Camera2Helper {
 
     //初始化MediaRecorder
     private void initMediaRecorder() {
+        MyLogUtil.e(TAG,"initMediaRecorder");
         mMediaRecorder = new MediaRecorder();
     }
 
+    //配置MediaRecorder
     public void setMediaRecorderConfig(int width, int height, int sensorOrientation) {
+        initMediaRecorder();
+        MyLogUtil.e(TAG,"setMediaRecorderConfig");
         File file = new File(mContext.getExternalCacheDir(), "demo.mp4");
         if (file.exists()) {
             file.delete();
@@ -641,7 +654,7 @@ public class Camera2Helper {
         mMediaRecorder.setOrientationHint(sensorOrientation);
         mMediaRecorder.setVideoFrameRate(30);
         mMediaRecorder.setVideoEncodingBitRate(8 * width * height);
-        Surface surface = new Surface(mTextureView.getSurfaceTexture());
+        Surface surface = new Surface(autoFitTextureView.getSurfaceTexture());
         mMediaRecorder.setPreviewDisplay(surface);
         mMediaRecorder.setOutputFile(file.getAbsolutePath());
         try {
@@ -651,22 +664,76 @@ public class Camera2Helper {
         }
     }
 
+    //是否正在录制视频
     public boolean isRecording() {
         return isRecording;
     }
 
+    //开始录制
     public void startRecord() {
         MyLogUtil.e(TAG, "startRecord");
         isRecording = true;
         mMediaRecorder.start();
+
     }
 
+    //停止录制
     public void stopRecord() {
+        MyLogUtil.e(TAG, "stopRecord");
         isRecording = false;
         mMediaRecorder.stop();
         mMediaRecorder.reset();
         createPreviewAndRecordAndImageReaderSession();
     }
 
+    //是否是前置相机
+    public boolean isFrontCamera() {
+        return isFrontCamera;
+    }
 
+    //切换相机
+    public void switchCamera() {
+        if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
+            facing = CameraCharacteristics.LENS_FACING_BACK;
+            isFrontCamera = false;
+        } else {
+            facing = CameraCharacteristics.LENS_FACING_FRONT;
+            isFrontCamera = true;
+        }
+        closeCamera();
+        openCamera();
+    }
+
+    //拍照
+    public void takePicture() {
+        MyLogUtil.e(TAG, "takePicture");
+        try {
+            mCameraCaptureSession.stopRepeating();
+            mCameraCaptureSession.abortCaptures();
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+        capture();
+    }
+
+    //锁定焦点
+    private void capture() {
+        MyLogUtil.e(TAG, "capture");
+        try {
+            //捕获单个图片的参数设置
+            CaptureRequest.Builder captureBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            pictureImageReader = ImageReader.newInstance(mPictureSize.getWidth(), mPictureSize.getHeight(), ImageFormat.JPEG, 2);
+            pictureImageReader.setOnImageAvailableListener(pictureImageAvailableListener, mBackgroundHandler);
+            //生成的新帧
+            captureBuilder.addTarget(pictureImageReader.getSurface());
+            // Orientation 方向
+            int rotation = ((WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
+            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, rotation);
+            MyLogUtil.e(TAG, "设置图片的方向=" + rotation);
+            captureBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START);
+            mCameraCaptureSession.capture(captureBuilder.build(), captureCallback, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
 }
