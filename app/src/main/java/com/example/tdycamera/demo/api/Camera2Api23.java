@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.example.tdycamera.api;
+package com.example.tdycamera.demo.api;
 
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.params.StreamConfigurationMap;
 
-import com.example.tdycamera.base.PreviewImpl;
-import com.example.tdycamera.base.Size;
-import com.example.tdycamera.base.SizeMap;
+import com.example.tdycamera.demo.base.PreviewImpl;
+import com.example.tdycamera.demo.base.Size;
+import com.example.tdycamera.demo.base.SizeMap;
 
 
 @TargetApi(23)

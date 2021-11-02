@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.tdycamera.apicamera;
+package com.example.tdycamera.demo.apicamera;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -26,7 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.tdycamera.R;
-import com.example.tdycamera.base.PreviewImpl;
+import com.example.tdycamera.demo.base.PreviewImpl;
 
 @TargetApi(14)
 public class TextureViewPreview extends PreviewImpl {

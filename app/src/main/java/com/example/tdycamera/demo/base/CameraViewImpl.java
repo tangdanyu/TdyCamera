@@ -1,4 +1,4 @@
-package com.example.tdycamera.base;
+package com.example.tdycamera.demo.base;
 
 import android.view.View;
 

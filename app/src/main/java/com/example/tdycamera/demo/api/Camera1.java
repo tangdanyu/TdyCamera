@@ -1,4 +1,4 @@
-package com.example.tdycamera.api;
+package com.example.tdycamera.demo.api;
 
 import static android.view.OrientationListener.ORIENTATION_UNKNOWN;
 
@@ -10,13 +10,12 @@ import android.view.SurfaceHolder;
 
 import androidx.collection.SparseArrayCompat;
 
-
-import com.example.tdycamera.base.AspectRatio;
-import com.example.tdycamera.base.CameraViewImpl;
-import com.example.tdycamera.base.Constants;
-import com.example.tdycamera.base.PreviewImpl;
-import com.example.tdycamera.base.Size;
-import com.example.tdycamera.base.SizeMap;
+import com.example.tdycamera.demo.base.AspectRatio;
+import com.example.tdycamera.demo.base.CameraViewImpl;
+import com.example.tdycamera.demo.base.Constants;
+import com.example.tdycamera.demo.base.PreviewImpl;
+import com.example.tdycamera.demo.base.Size;
+import com.example.tdycamera.demo.base.SizeMap;
 import com.example.tdycamera.utils.MyLogUtil;
 
 import java.io.IOException;

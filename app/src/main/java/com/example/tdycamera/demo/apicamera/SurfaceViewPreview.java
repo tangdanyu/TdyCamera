@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.tdycamera.apicamera;
+package com.example.tdycamera.demo.apicamera;
 
 import android.content.Context;
 import android.view.Surface;
@@ -26,7 +26,7 @@ import android.view.ViewGroup;
 import androidx.core.view.ViewCompat;
 
 import com.example.tdycamera.R;
-import com.example.tdycamera.base.PreviewImpl;
+import com.example.tdycamera.demo.base.PreviewImpl;
 
 public class SurfaceViewPreview extends PreviewImpl {
 

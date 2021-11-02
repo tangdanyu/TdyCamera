@@ -1,4 +1,4 @@
-package com.example.tdycamera.apicamera;
+package com.example.tdycamera.demo.apicamera;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -15,13 +15,13 @@ import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 
 import com.example.tdycamera.R;
-import com.example.tdycamera.api.Camera1;
-import com.example.tdycamera.api.Camera2;
-import com.example.tdycamera.api.Camera2Api23;
-import com.example.tdycamera.base.AspectRatio;
-import com.example.tdycamera.base.CameraViewImpl;
-import com.example.tdycamera.base.Constants;
-import com.example.tdycamera.base.PreviewImpl;
+import com.example.tdycamera.demo.api.Camera1;
+import com.example.tdycamera.demo.api.Camera2;
+import com.example.tdycamera.demo.api.Camera2Api23;
+import com.example.tdycamera.demo.base.AspectRatio;
+import com.example.tdycamera.demo.base.CameraViewImpl;
+import com.example.tdycamera.demo.base.Constants;
+import com.example.tdycamera.demo.base.PreviewImpl;
 import com.example.tdycamera.view.DisplayOrientationDetector;
 
 import java.lang.annotation.Retention;

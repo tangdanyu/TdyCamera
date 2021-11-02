@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.tdycamera.base;
+package com.example.tdycamera.demo.base;
 
 
 import androidx.collection.ArrayMap;

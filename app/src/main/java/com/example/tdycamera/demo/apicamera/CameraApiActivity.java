@@ -1,4 +1,4 @@
-package com.example.tdycamera.apicamera;
+package com.example.tdycamera.demo.apicamera;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -16,8 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 
 import com.example.tdycamera.R;
-
-import com.example.tdycamera.base.AspectRatio;
+import com.example.tdycamera.demo.base.AspectRatio;
 import com.example.tdycamera.view.AspectRatioFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 

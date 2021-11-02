@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.tdycamera.api;
+package com.example.tdycamera.demo.api;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -30,19 +30,18 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
-
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.Surface;
 
 import androidx.annotation.NonNull;
 
-import com.example.tdycamera.base.AspectRatio;
-import com.example.tdycamera.base.CameraViewImpl;
-import com.example.tdycamera.base.Constants;
-import com.example.tdycamera.base.PreviewImpl;
-import com.example.tdycamera.base.Size;
-import com.example.tdycamera.base.SizeMap;
+import com.example.tdycamera.demo.base.AspectRatio;
+import com.example.tdycamera.demo.base.CameraViewImpl;
+import com.example.tdycamera.demo.base.Constants;
+import com.example.tdycamera.demo.base.PreviewImpl;
+import com.example.tdycamera.demo.base.Size;
+import com.example.tdycamera.demo.base.SizeMap;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
