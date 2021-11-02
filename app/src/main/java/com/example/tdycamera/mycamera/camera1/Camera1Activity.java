@@ -1,7 +1,13 @@
 package com.example.tdycamera.mycamera.camera1;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -11,6 +17,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
 import com.example.tdycamera.R;
@@ -38,7 +45,6 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
     //相机数据回调
     private CameraListener cameraListener;
     //相机预览控件
-    private SurfaceView surfaceView;
     private AutoFitTextureView autoFitTextureView;
     private ImageView previewIv;
 
@@ -64,7 +70,6 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
 
     private void initView() {
         autoFitTextureView = findViewById(R.id.texture_view);
-        surfaceView = findViewById(R.id.surface_view);
         previewIv = findViewById(R.id.preview_iv);
         switchCameraBtn = findViewById(R.id.switch_camera_btn);
         settingBtn = findViewById(R.id.setting_btn);
@@ -92,10 +97,6 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                             width, height, width, height, screenAutoRotate());
                 }
             }
-            @Override
-            public void onCameraClosed() {
-
-            }
 
             @Override
             public void onCameraPreview(byte[] data, int width, int height, int displayOrientation) {
@@ -104,12 +105,12 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                 if (width <= 0 || height <= 0) {
                     return;
                 }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        previewIv.setImageBitmap(ImageUtil.nv21ToBitmap(data, width, height, getBaseContext()));
-                    }
-                });
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        previewIv.setImageBitmap(ImageUtil.nv21ToBitmap(data, width, height, getBaseContext()));
+//                    }
+//                });
 
                 // 输入角度
                 int inAngle = camera1Helper.isFrontCamera() ? (displayOrientation + 360 - mRotateDegree) % 360 : (displayOrientation + mRotateDegree) % 360;
@@ -120,11 +121,41 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                     outAngle = camera1Helper.isFrontCamera() ? (360 - mRotateDegree) % 360 : mRotateDegree % 360;
                 }
 //                MyLogUtil.e(TAG,"MNN"+" data="+data.length+" displayOrientation="+displayOrientation+" inAngle="+inAngle+" outAngle="+outAngle);//data=2764800 displayOrientation=270 inAngle=270 outAngle=0
-                FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height, 1, inAngle, outAngle, true);
+                FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height, 1, inAngle, outAngle, camera1Helper.isFrontCamera());
                 if (results != null) {
                     mnnDrawUtil.drawResult(displayOrientation, mRotateDegree, results);
                 } else {
                     mnnDrawUtil.drawClear();
+                }
+            }
+
+            @Override
+            public void onPictureTaken(byte[] data) {
+                Bitmap bitmap = null;
+                try {
+                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    if (bitmap != null) {
+                        Bitmap newImage = null;
+                        if (camera1Helper.isFrontCamera()) {
+                            MyLogUtil.e(TAG, "前置");
+                            //使用矩阵反转图像数据并保持其正常
+                            Matrix mtx = new Matrix();
+                            //这将防止镜像
+                            mtx.preScale(-1.0f, 1.0f);
+                            //将post rotate设置为90，因为图像可能位于横向
+//                            mtx.postRotate(90.f);
+                            //旋转位图，创建我们想要的真实图像
+                            newImage = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), mtx, true);
+                        } else {// LANDSCAPE MODE
+                            MyLogUtil.e(TAG, "后置");
+                            //不需要反转宽度和高度
+                            newImage = bitmap;
+                        }
+                        previewIv.setImageBitmap(newImage);
+                    }
+                } catch (OutOfMemoryError e) {
+                    MyLogUtil.e(TAG, "Out of memory decoding image from camera." + e);
+                    return;
                 }
             }
         };
@@ -162,7 +193,7 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void initData() {
-        camera1Helper = new Camera1Helper(this, cameraListener, autoFitTextureView);
+        camera1Helper = new Camera1Helper(this, autoFitTextureView, cameraListener);
         mnnFaceDetectorAdapter = new MNNFaceDetectorAdapter(this, mnnFaceDetectListener);
     }
 
@@ -194,9 +225,9 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.switch_camera_btn:
-                if(camera1Helper!= null){
+                if (camera1Helper != null) {
                     camera1Helper.switchCamera();
                 }
                 break;
@@ -204,18 +235,22 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                 startActivity(new Intent(getBaseContext(), Camera1SettingsActivity.class));
                 break;
             case R.id.take_picture_btn:
-                if(camera1Helper!= null) {
+                if (camera1Helper != null) {
                     camera1Helper.takePicture();
                 }
                 break;
             case R.id.record_btn:
-                if(camera1Helper!= null) {
-                    if (camera1Helper.isRecording()) {
-                        recordBtn.setText("开始录制");
-                        camera1Helper.stopRecord();
-                    } else {
-                        recordBtn.setText("结束录制");
-                        camera1Helper.startRecord();
+                if (camera1Helper != null) {
+                    if(camera1Helper.isRecordVideo()){
+                        if (camera1Helper.isRecording()) {
+                            recordBtn.setText("开始录制");
+                            camera1Helper.stopRecord();
+                        } else {
+                            recordBtn.setText("结束录制");
+                            camera1Helper.startRecord();
+                        }
+                    }else {
+                        Toast.makeText(this,"没有开启录像",Toast.LENGTH_SHORT);
                     }
                 }
                 break;
