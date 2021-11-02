@@ -31,7 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
-import com.example.tdycamera.base.AspectRatio;
+import com.example.tdycamera.demo.base.AspectRatio;
 
 import java.util.Arrays;
 import java.util.Set;

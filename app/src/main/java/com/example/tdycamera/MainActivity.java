@@ -14,7 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.tdycamera.apicamera.CameraApiActivity;
+
+import com.example.tdycamera.demo.apicamera.CameraApiActivity;
 import com.example.tdycamera.mycamera.camera1.Camera1Activity;
 import com.example.tdycamera.mycamera.camera2.AutoCamera2Activity;
 import com.example.tdycamera.mycamera.camera2.Camera2Activity;

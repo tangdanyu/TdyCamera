@@ -9,7 +9,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.example.tdycamera.apicamera.CameraView
+    <com.example.tdycamera.demo.apicamera.CameraView
         android:id="@+id/camera"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
