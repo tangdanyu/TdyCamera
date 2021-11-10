@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -12,7 +11,6 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.OrientationEventListener;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -27,7 +25,7 @@ import com.example.tdycamera.mnn.MNNFaceDetectListener;
 import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
 import com.example.tdycamera.utils.MyLogUtil;
 import com.example.tdycamera.view.AutoFitTextureView;
-import com.example.tdycamera.utils.ImageUtil;
+import com.example.tdycamera.view.FocusView;
 
 public class Camera1Activity extends AppCompatActivity implements View.OnClickListener {
     private String TAG = "Camera1Activity";
@@ -151,6 +149,7 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                             //不需要反转宽度和高度
                             newImage = bitmap;
                         }
+                        previewIv.setVisibility(View.VISIBLE);
                         previewIv.setImageBitmap(newImage);
                     }
                 } catch (OutOfMemoryError e) {

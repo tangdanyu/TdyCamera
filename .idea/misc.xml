@@ -8,6 +8,7 @@
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/drawable-v24/ic_flash_off.xml" value="0.38229166666666664" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.3140625" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/drawable-v24/ic_switch_camera.xml" value="0.38229166666666664" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/drawable/flash_camera.xml" value="0.17037037037037037" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/drawable/ic_launcher_background.xml" value="0.38229166666666664" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_auto_camera1.xml" value="0.16927083333333334" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_auto_camera2.xml" value="0.1" />
@@ -22,6 +23,7 @@
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_main.xml" value="0.18" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/activity_phone_camera.xml" value="0.22864583333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/fragment_camera2_basic.xml" value="0.196875" />
+        <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/include_flash.xml" value="0.16767983789260385" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/mnn_view.xml" value="0.1" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/settings_activity.xml" value="0.3536458333333333" />
         <entry key="..\:/tangdanyu/TdyCamera/app/src/main/res/layout/surface_view.xml" value="0.20520833333333333" />

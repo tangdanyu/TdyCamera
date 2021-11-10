@@ -5,3 +5,7 @@ Android相机相关
 
 https://juejin.cn/editor/drafts/7022877360982589448
 
+* 自带相机应用
+<img src="screenshots/img_phone_camera.jpg" height="400" alt="Screenshot"/>
+
+

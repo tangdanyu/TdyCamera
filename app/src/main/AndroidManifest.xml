@@ -53,7 +53,7 @@
         <activity
             android:name=".phonecamera.PhoneCameraActivity"
             android:exported="true" /> <!-- 设置全屏没有标题栏 -->
-        <activity android:name=".apicamera.CameraApiActivity" /> <!-- android:theme="@style/Theme.AppCompat.NoActionBar" -->
+        <activity android:name=".demo.apicamera.CameraApiActivity" /> <!-- android:theme="@style/Theme.AppCompat.NoActionBar" -->
         <!-- /> -->
         <activity android:name=".MainActivity" >
             <intent-filter>

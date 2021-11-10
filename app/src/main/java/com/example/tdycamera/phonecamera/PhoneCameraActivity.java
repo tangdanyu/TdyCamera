@@ -69,7 +69,7 @@ public class PhoneCameraActivity extends AppCompatActivity  implements View.OnCl
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.btn_phoneCamera:
+            case R.id.btn_takePicture1:
                 takePictureGetThumbnail();
                 break;
             case R.id.btn_takePicture2:

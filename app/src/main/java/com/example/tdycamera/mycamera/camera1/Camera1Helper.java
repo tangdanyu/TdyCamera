@@ -3,6 +3,8 @@ package com.example.tdycamera.mycamera.camera1;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.Point;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
@@ -22,6 +24,8 @@ import com.example.tdycamera.view.AutoFitTextureView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -57,8 +61,8 @@ public class Camera1Helper implements Camera.PreviewCallback,
     private MediaRecorder mMediaRecorder;           //录制视频
     private boolean isRecording = false;            //是否正在录制
     private String mNextVideoAbsolutePath;          //录制视频路径
-    private int mFlash;                             //闪光灯模式
     private static final SparseArrayCompat<String> FLASH_MODES = new SparseArrayCompat<>();
+    private byte[] buffer;                          //预览字节缓存
 
     //闪光灯模式
     static {
@@ -157,6 +161,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
 
     // 停止预览
     private synchronized void stop() {
+        buffer = null;
         MyLogUtil.e(TAG, "stop");
         if (mCamera != null) {
             mCamera.setPreviewCallback(null);
@@ -180,14 +185,12 @@ public class Camera1Helper implements Camera.PreviewCallback,
                 if (isAddCallbackBuffer) {
                     //设置缓冲区
                     if (imageFormat == ImageFormat.NV21) {
-                        mCamera.addCallbackBuffer(new byte[mPreviewSize.width * mPreviewSize.height * 3 / 2]);
-                        mCamera.addCallbackBuffer(new byte[mPreviewSize.width * mPreviewSize.height * 3 / 2]);
-                        mCamera.addCallbackBuffer(new byte[mPreviewSize.width * mPreviewSize.height * 3 / 2]);
+                        buffer = new byte[mPreviewSize.width * mPreviewSize.height * 3 / 2];
+                        mCamera.addCallbackBuffer(buffer);
                         MyLogUtil.e(TAG, "NV21=" + mPreviewSize.width * mPreviewSize.height * 3 / 2);//2764800
                     } else if (imageFormat == ImageFormat.YV12) {
-                        mCamera.addCallbackBuffer(new byte[getYV12Size(mPreviewSize.width, mPreviewSize.height)]);
-                        mCamera.addCallbackBuffer(new byte[getYV12Size(mPreviewSize.width, mPreviewSize.height)]);
-                        mCamera.addCallbackBuffer(new byte[getYV12Size(mPreviewSize.width, mPreviewSize.height)]);
+                        buffer = new byte[getYV12Size(mPreviewSize.width, mPreviewSize.height)];
+                        mCamera.addCallbackBuffer(buffer);
                         MyLogUtil.e(TAG, "YV12 size=" + getYV12Size(mPreviewSize.width, mPreviewSize.height)
                                 + " width=" + mPreviewSize.width + " height=" + mPreviewSize.height);//size =2764800 width=1920 height=960
                     }
@@ -269,8 +272,6 @@ public class Camera1Helper implements Camera.PreviewCallback,
         //设置自动对焦
         setAutoFocus(isAutoFocus);
 
-        setFlash(mFlash);
-
         //设置禁用快门声音
         setShutterSound(isShutterSound);
 
@@ -282,6 +283,9 @@ public class Camera1Helper implements Camera.PreviewCallback,
 
         //设置缩放
         setZoom();
+
+        //设置帧率
+//        setFpsRange(15,30);
 
         mCamera.setParameters(mCameraParameters);
 //        MyLogUtil.e(TAG, "相机参数="+mCameraParameters.flatten() );
@@ -366,7 +370,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
             }
         }
         if (closelySize != null) {
-            if(mVideoSize.width>=1920 || mVideoSize.height >= 1080){
+            if (mVideoSize.width >= 1920 || mVideoSize.height >= 1080) {
                 mVideoSize.width = 1920;
                 mVideoSize.height = 1080;
             }
@@ -392,6 +396,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
         mPictureSize.height = h;
         MyLogUtil.e(TAG, "图片尺寸修改为：" + mPictureSize.width + "*" + mPictureSize.height);
         mCameraParameters.setPictureSize(mPictureSize.width, mPictureSize.height);
+        mCameraParameters.setPictureFormat(ImageFormat.JPEG);
     }
 
     //设置/取消自动对焦
@@ -416,26 +421,28 @@ public class Camera1Helper implements Camera.PreviewCallback,
         }
     }
 
-    //设置闪光灯
-    private void setFlash(int flash) {
-        if (isCameraOpened()) {
-            //获得相机支持的闪光灯模式
-            List<String> modes = mCameraParameters.getSupportedFlashModes();
-            String mode = FLASH_MODES.get(flash);
-            if (modes != null && modes.contains(mode)) {
-                mCameraParameters.setFlashMode(mode);
-                mFlash = flash;
-                return;
-            }
-            String currentMode = FLASH_MODES.get(mFlash);
-            if (modes == null || !modes.contains(currentMode)) {
-                mCameraParameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-                mFlash = 0;
-            }
-        } else {
-            mFlash = flash;
+    /**
+     * 支持的闪光效果, 在开启相机之后获取
+     *
+     * @return
+     */
+    public List<String> getSupportedFlashModes() {
+        if (mCamera != null) {
+            return mCamera.getParameters().getSupportedFlashModes();
+        }
+        return null;
+    }
+
+    // 设置当前闪光效果
+    public void setFlashMode(String flashMode) {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            if (flashMode.equals(parameters.getFlashMode())) return;
+            parameters.setFlashMode(flashMode);
+            mCamera.setParameters(parameters);
         }
     }
+
 
     //禁用快门声音
     private void setShutterSound(boolean enabled) {
@@ -462,6 +469,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
         }
     }
 
+    // 设置生成图片的旋转角度,只对拍摄照片时有效.,考虑到此方法对部分机型没有效果,拍照后再统一旋转
     //设置照片的方向
     private void setRotation() {
         MyLogUtil.e(TAG, "setRotation");
@@ -489,6 +497,144 @@ public class Camera1Helper implements Camera.PreviewCallback,
         }
     }
 
+    //手动聚焦
+    public void handleFocus(PointF scalePointF) {
+        handleFocus(scalePointF, 200, 300);
+    }
+
+    /**
+     * 手动聚焦
+     *
+     * @param scalePointF 聚焦点坐标与聚焦点所预览的界面宽高的比例
+     * @param fsize       聚焦方形区域大小
+     * @param msize       测光方形区域大小
+     */
+    public void handleFocus(PointF scalePointF, int fsize, int msize) {
+        if (mCamera == null) return;
+        Camera.Parameters parameters = mCamera.getParameters();
+        //一般使用能自动聚焦的即可
+        String autoFocusMode = findFocusbackMode(parameters);
+        if (autoFocusMode == null) return;
+        mCamera.cancelAutoFocus();
+        if (parameters.getMaxNumFocusAreas() > 0) {//聚焦区域
+            List<Camera.Area> focusAreas = new ArrayList<>();
+            //聚焦区域
+            Rect focusRect = calculateTapArea(scalePointF, fsize);
+            focusAreas.add(new Camera.Area(focusRect, 800));
+            parameters.setFocusAreas(focusAreas);
+        } else {
+            MyLogUtil.e(TAG, "focus areas not supported");
+        }
+        if (parameters.getMaxNumMeteringAreas() > 0) {//测光区域
+            List<Camera.Area> meteringAreas = new ArrayList<>();
+            Rect meteringRect = calculateTapArea(scalePointF, msize);
+            meteringAreas.add(new Camera.Area(meteringRect, 800));
+            parameters.setMeteringAreas(meteringAreas);
+        } else {
+            MyLogUtil.e(TAG, "metering areas not supported");
+        }
+
+        final String currentFocusMode = parameters.getFocusMode();
+        parameters.setFocusMode(autoFocusMode);
+        mCamera.setParameters(parameters);
+        mCamera.autoFocus((success, camera) -> {
+            Camera.Parameters params = camera.getParameters();
+            params.setFocusMode(currentFocusMode);
+            camera.setParameters(params);
+            //如果有设置自动对焦回调时不可设置为null
+            camera.autoFocus(null);
+            MyLogUtil.e(TAG, "autoFocus..." + success);
+        });
+    }
+
+    /**
+     * 焦点区域坐标点  (-1000, -1000, 1000, 1000),根据点坐标x,y轴与实际大小w,h比例计算出该点的区域大小
+     *
+     * @param scalePointF 聚焦点坐标与聚焦点所预览的界面宽高的比例
+     * @param areaSize    聚焦方形区域大小
+     * @return
+     */
+    private Rect calculateTapArea(PointF scalePointF, int areaSize) {
+        int centerX = (int) (scalePointF.x * 2000 - 1000);
+        int centerY = (int) (scalePointF.y * 2000 - 1000);
+
+        int left = clamp(centerX - areaSize / 2, -1000, 1000);
+        int top = clamp(centerY - areaSize / 2, -1000, 1000);
+        int right = clamp(left + areaSize, -1000, 1000);
+        int bottom = clamp(top + areaSize, -1000, 1000);
+        return new Rect(left, top, right, bottom);
+    }
+
+    /**
+     * x值不能超出min~max范围
+     */
+    private int clamp(int x, int min, int max) {
+        if (x > max) return max;
+        if (x < min) return min;
+        return x;
+    }
+
+    /**
+     * 查找能回调出{@link Camera#autoFocus(Camera.AutoFocusCallback)}的聚焦模式
+     * 源码注释中指出FOCUS_MODE_AUTO 与 FOCUS_MODE_MACRO 支持, 优先使用前者
+     *
+     * @param parameters
+     * @return
+     */
+    private String findFocusbackMode(Camera.Parameters parameters) {
+        List<String> supportedFocusModes = parameters.getSupportedFocusModes();
+        if (supportedFocusModes != null && !supportedFocusModes.isEmpty()) {
+            if (supportedFocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO))
+                return Camera.Parameters.FOCUS_MODE_AUTO;
+            if (supportedFocusModes.contains(Camera.Parameters.FOCUS_MODE_MACRO))
+                return Camera.Parameters.FOCUS_MODE_MACRO;
+        }
+        return null;
+    }
+
+    //缩放
+    public void handleZoom(float targetRatio) {
+        if (mCamera == null) return;
+        Camera.Parameters parameters = mCamera.getParameters();
+        if (!parameters.isZoomSupported()) return;
+        List<Integer> zoomRatios = parameters.getZoomRatios();
+        if (zoomRatios == null || zoomRatios.isEmpty()) return;
+        int zoom = indexByBinary(zoomRatios, targetRatio * 100);
+        if (zoom == parameters.getZoom()) return;
+        parameters.setZoom(zoom);
+        mCamera.setParameters(parameters);
+    }
+
+    /**
+     * 二分查找最接近的
+     *
+     * @param ints
+     * @param target
+     * @return
+     */
+    private int indexByBinary(List<Integer> ints, float target) {
+        int low = 0;
+        int high = ints.size() - 1;
+        if (ints.size() == 1) return 0;
+        if (target <= ints.get(low)) return low;
+        if (target >= ints.get(high)) return high;
+        int middle = 0;
+        float left, right;
+        while (low <= high) {
+            middle = (low + high) / 2;
+            right = Math.abs(ints.get(middle + 1) - target);
+            left = Math.abs(ints.get(middle) - target);
+            if (right > left) {
+                high = middle - 1;
+            } else {
+                low = middle + 1;
+            }
+        }
+        right = Math.abs(ints.get(middle + 1) - target);
+        left = Math.abs(ints.get(middle) - target);
+        return right > left ? middle : middle + 1;
+    }
+
     //开始平滑缩放
     private void startSmoothZoom(int value) {
         if (mCamera != null) {
@@ -514,6 +660,53 @@ public class Camera1Helper implements Camera.PreviewCallback,
                 mCamera.setZoomChangeListener(this);
             }
         }
+    }
+
+    //初始相机预览帧率, 一般相机都支持7K~30K, 可以设置15~25, 帧率过高时, 旋转裁剪低配手机编码速度容易跟不上
+    private void setFpsRange(int minFps, int maxFps) {
+        List<int[]> supportedPreviewFpsRange = mCameraParameters.getSupportedPreviewFpsRange();
+        if (supportedPreviewFpsRange == null || supportedPreviewFpsRange.isEmpty()) return;
+        int[] suitableFPSRange = null;
+        for (int[] fpsRange : supportedPreviewFpsRange) {
+//            LogUtils.i("supportPreviewFps %d - %d", fpsRange[0], fpsRange[1]);
+            if (fpsRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX] >= minFps
+                    && fpsRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX] <= maxFps) {
+                suitableFPSRange = fpsRange;
+                break;
+            }
+        }
+        if (suitableFPSRange != null) {
+            int[] currentFpsRange = new int[2];
+            mCameraParameters.getPreviewFpsRange(currentFpsRange);
+            if (Arrays.equals(currentFpsRange, suitableFPSRange)) {
+                return;
+            }
+            mCameraParameters.setPreviewFpsRange(suitableFPSRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX],
+                    suitableFPSRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]);
+        } else {
+            MyLogUtil.e(TAG, "No suitable FPS range in  " + minFps + maxFps);
+        }
+    }
+
+    /**
+     * 获取最大支持的缩放比例, 最小就为1.0f初始大小
+     *
+     * @return
+     */
+    public float getMaxZoomScale() {
+        if (mCamera != null) {
+            Camera.Parameters parameters = mCamera.getParameters();
+            if (parameters.isZoomSupported()) {
+                //getZoomRatios源码The list is sorted from small to large
+                List<Integer> zoomRatios = parameters.getZoomRatios();
+                if (zoomRatios != null && zoomRatios.size() == parameters.getMaxZoom() + 1) {
+                    int minZoom = zoomRatios.get(0);
+                    float maxZoom = zoomRatios.get(zoomRatios.size() - 1);
+                    return maxZoom / minZoom;
+                }
+            }
+        }
+        return 1.0f;
     }
 
     //计算预览方向
@@ -577,9 +770,6 @@ public class Camera1Helper implements Camera.PreviewCallback,
         this.mContext = context;
         this.cameraListener = cameraListener;
         this.mPreviewDisplayView = previewDisplayView;
-        if (isRecordVideo) {
-            initMediaRecorder();
-        }
         // 获取当前的屏幕尺寸, 放到一个点对象里
         Point screenSize = new Point();
         ((WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getSize(screenSize);
@@ -675,15 +865,9 @@ public class Camera1Helper implements Camera.PreviewCallback,
         if (!isPictureCaptureInProgress.getAndSet(true)) {
             if (mCamera != null) {
                 MyLogUtil.e(TAG, "拍照了");
-                mCamera.takePicture(null, null, null, this);
+                mCamera.takePicture(null, null, this);
             }
         }
-    }
-
-    //初始化MediaRecorder
-    private void initMediaRecorder() {
-        MyLogUtil.e(TAG, "initMediaRecorder");
-        mMediaRecorder = new MediaRecorder();
     }
 
     private String getVideoFilePath(Context context) {
@@ -694,35 +878,40 @@ public class Camera1Helper implements Camera.PreviewCallback,
 
     //设置录制视频参数
     public void setMediaRecorderConfig() {
-        MyLogUtil.e(TAG, "setMediaRecorderConfig");
-        mMediaRecorder.setCamera(mCamera);//camera1
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);//camera
-        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setVideoSize(mVideoSize.width, mVideoSize.height);
-        mMediaRecorder.setVideoFrameRate(30);
-        mMediaRecorder.setVideoEncodingBitRate(8 * mVideoSize.width * mVideoSize.height);
-        Surface surface = new Surface(((TextureView) mPreviewDisplayView).getSurfaceTexture());
-        mMediaRecorder.setPreviewDisplay(surface);
-        if (mNextVideoAbsolutePath == null || mNextVideoAbsolutePath.isEmpty()) {
-            mNextVideoAbsolutePath = getVideoFilePath(mContext);
+        if (isRecordVideo) {
+            MyLogUtil.e(TAG, "setMediaRecorderConfig");
+            mMediaRecorder = new MediaRecorder();
+            mMediaRecorder.setCamera(mCamera);//camera1
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);//camera
+            mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+            mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+            mMediaRecorder.setVideoSize(mVideoSize.width, mVideoSize.height);
+            mMediaRecorder.setVideoFrameRate(30);
+            mMediaRecorder.setVideoEncodingBitRate(8 * mVideoSize.width * mVideoSize.height);
+            Surface surface = new Surface(((TextureView) mPreviewDisplayView).getSurfaceTexture());
+            mMediaRecorder.setPreviewDisplay(surface);
+            if (mNextVideoAbsolutePath == null || mNextVideoAbsolutePath.isEmpty()) {
+                mNextVideoAbsolutePath = getVideoFilePath(mContext);
+            }
+            mMediaRecorder.setOutputFile(mNextVideoAbsolutePath);
+            mMediaRecorder.setOrientationHint(mCameraOrientation);
+            try {
+                mMediaRecorder.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        mMediaRecorder.setOutputFile(mNextVideoAbsolutePath);
-        mMediaRecorder.setOrientationHint(mCameraOrientation);
-        try {
-            mMediaRecorder.prepare();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
     //是否正在录制视频
     public boolean isRecording() {
         return isRecording;
     }
-    public boolean isRecordVideo(){
+
+    public boolean isRecordVideo() {
         return isRecordVideo;
     }
 
