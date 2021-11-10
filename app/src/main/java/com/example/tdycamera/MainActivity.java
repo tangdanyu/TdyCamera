@@ -23,6 +23,7 @@ import com.example.tdycamera.mycamera.camera2.basic.Camera2BasicActivity;
 import com.example.tdycamera.mycamera.camera2.video.Camera2VideoActivity;
 import com.example.tdycamera.mycamera.camerax.CameraXBasicActivity;
 import com.example.tdycamera.phonecamera.PhoneCameraActivity;
+import com.example.tdycamera.record.RecordAudioActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private Button btnCamera2Video;
     private Button btnCamera2Basic;
     private Button btnCameraxDemo;
+    private Button btnRecordAudio;
 
 
     private int REQUEST_CAMERA_PERMISSION = 100;
@@ -61,6 +63,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera2Auto = findViewById(R.id.btn_camera2_auto);
         btnCamera2Basic = findViewById(R.id.btn_camera2_basic);
         btnCameraxDemo = findViewById(R.id.btn_camerax_demo);
+        btnRecordAudio = findViewById(R.id.btn_record_audio);
     }
     private void initListener(){
         btnPhoneCamera.setOnClickListener(this);
@@ -71,6 +74,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera2Auto.setOnClickListener(this);
         btnCamera2Basic.setOnClickListener(this);
         btnCameraxDemo.setOnClickListener(this);
+        btnRecordAudio.setOnClickListener(this);
     }
 
     @Override
@@ -99,6 +103,9 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 break;
             case R.id.btn_camerax_demo:
                 startActivity(new Intent(this, CameraXBasicActivity.class));
+                break;
+            case R.id.btn_record_audio:
+                startActivity(new Intent(this, RecordAudioActivity.class));
                 break;
         }
     }

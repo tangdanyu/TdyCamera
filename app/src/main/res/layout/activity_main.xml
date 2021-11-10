@@ -75,7 +75,13 @@
             app:layout_constraintEnd_toEndOf="@+id/btn_camera2"
             app:layout_constraintStart_toStartOf="@+id/btn_camera2"
             app:layout_constraintTop_toBottomOf="@+id/btn_camera2" />
-
-
+        <Button
+            android:id="@+id/btn_record_audio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="使用 MediaRecorder 录音"
+            app:layout_constraintEnd_toEndOf="@+id/btn_camerax_demo"
+            app:layout_constraintStart_toStartOf="@+id/btn_camerax_demo"
+            app:layout_constraintTop_toBottomOf="@+id/btn_camerax_demo" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>
