@@ -17,6 +17,10 @@ import com.example.tdycamera.R;
 
 import java.io.IOException;
 
+/**
+ * MediaRecorder录音
+ * MediaPlayer播放
+ */
 public class RecordAudioActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String LOG_TAG = "RecordAudioActivity";
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
@@ -44,9 +48,10 @@ public class RecordAudioActivity extends AppCompatActivity implements View.OnCli
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
 
-        recordButton = findViewById(R.id.btn_record_audio);
+        recordButton = findViewById(R.id.btn_record);
         playButton = findViewById(R.id.btn_play);
-
+        recordButton.setOnClickListener(this);
+        playButton.setOnClickListener(this);
     }
 
 
@@ -118,13 +123,13 @@ public class RecordAudioActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
-            case R.id.btn_record_audio:
+        switch (view.getId()) {
+            case R.id.btn_record:
                 onRecord(mStartRecording);
                 if (mStartRecording) {
-                    recordButton.setText("停止录制");
+                    recordButton.setText("停止录音");
                 } else {
-                    recordButton.setText("开始录制");
+                    recordButton.setText("开始录音");
                 }
                 mStartRecording = !mStartRecording;
                 break;
@@ -139,8 +144,6 @@ public class RecordAudioActivity extends AppCompatActivity implements View.OnCli
                 break;
         }
     }
-
-
 
 
     @Override
