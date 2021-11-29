@@ -77,6 +77,7 @@ public class Camera2Helper {
     private int format = ImageFormat.NV21;                  //设置YUV420
 
     private MediaRecorder mMediaRecorder;                   // 尺寸不要大于1080p，因为MediaRecorder无法处理如此高分辨率的视频。
+    private boolean isRecordVideo = true;          //是否录制视频
     private boolean isRecording = false;                    //是否正在录制
     private String mNextVideoAbsolutePath;                  //录制视频路径
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
@@ -106,7 +107,7 @@ public class Camera2Helper {
     private static final int MAX_PREVIEW_WIDTH = 1920;
     private static final int MAX_PREVIEW_HEIGHT = 1080;
 
-    private CameraListener mCameraListener;
+    private CameraListener mCameraListener;             //相机事件回调
     private byte[] y, u, v, i420, yv12, nv21, nv12;
 
     public Camera2Helper(Context context, AutoFitTextureView mTextureView, CameraListener cameraListener) {
@@ -114,7 +115,6 @@ public class Camera2Helper {
         this.autoFitTextureView = mTextureView;
         this.mCameraListener = cameraListener;
         mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
-        initMediaRecorder();
     }
 
     //SurfaceTexture与相机关联
@@ -338,7 +338,9 @@ public class Camera2Helper {
                 //ImageFormat.JPEG格式直接转化为Bitmap格式。
                 Bitmap temp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 //因为摄像机数据默认是横的，所以需要旋转90度。
-
+                if (mCameraListener != null) {
+                    mCameraListener.onPictureTaken(bytes);
+                }
                 //抛出去展示或存储。
             }
             //一定需要close，否则不会收到新的Image回调。
@@ -715,11 +717,16 @@ public class Camera2Helper {
         if (chooseSize == null) {
             // 得到与传入的宽高比最接近的size
             float reqRatio = ((float) screenWidth) / screenHeight;
-//            MyLogUtil.e(TAG, "宽高比 " + reqRatio);
+            MyLogUtil.e(TAG, "宽高比 " + reqRatio);
+
             float curRatio, deltaRatio;
             float deltaRatioMin = Float.MAX_VALUE;
             for (Size option : choices) {
                 if (option.getWidth() < 240) continue;//1024表示可接受的最小尺寸，否则图像会很模糊，可以随意修改
+                if(Math.max(option.getWidth(),option.getHeight())>MAX_PREVIEW_WIDTH +1||
+                        Math.min(option.getWidth(),option.getHeight())>MAX_PREVIEW_HEIGHT+1){
+                    continue;
+                }//不能超过这个，否则录制视频会花
                 curRatio = ((float) option.getWidth()) / option.getHeight();
                 deltaRatio = Math.abs(reqRatio - curRatio);
                 if (deltaRatio < deltaRatioMin) {
@@ -815,22 +822,16 @@ public class Camera2Helper {
         }
     }
 
-    //初始化MediaRecorder
-    private void initMediaRecorder() {
-        MyLogUtil.e(TAG, "initMediaRecorder");
-        mMediaRecorder = new MediaRecorder();
-    }
-
     private String getVideoFilePath(Context context) {
         final File dir = context.getExternalFilesDir(null);
         return (dir == null ? "" : (dir.getAbsolutePath() + "/"))
                 + System.currentTimeMillis() + ".mp4";
     }
 
-    //配置MediaRecorder
+    //设置录制视频参数
     public void setMediaRecorderConfig() {
         MyLogUtil.e(TAG, "setMediaRecorderConfig");
-
+        mMediaRecorder = new MediaRecorder();
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);//camera2
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
@@ -866,23 +867,31 @@ public class Camera2Helper {
     public boolean isRecording() {
         return isRecording;
     }
+    public boolean isRecordVideo(){
+        return isRecordVideo;
+    }
 
     //开始录制
     public void startRecord() {
         MyLogUtil.e(TAG, "startRecord");
-        createPreviewAndRecordAndImageReaderSession();
+        if (isRecordVideo) {
+            createPreviewAndRecordAndImageReaderSession();
+        }
     }
 
-    //停止录制
+    //结束录制
     public void stopRecord() {
         MyLogUtil.e(TAG, "stopRecord");
-        isRecording = false;
-        mMediaRecorder.stop();
-        mMediaRecorder.reset();
+        if (isRecordVideo) {
+            isRecording = false;
+            mMediaRecorder.stop();
+            mMediaRecorder.reset();
 
-        MyLogUtil.e(TAG, "视频录制 " + mNextVideoAbsolutePath);///storage/emulated/0/Android/data/com.example.tdycamera/files/1635497535274.mp4
-        mNextVideoAbsolutePath = null;
-        createPreviewAndImageReaderSession();
+            MyLogUtil.e(TAG, "视频录制 " + mNextVideoAbsolutePath);///storage/emulated/0/Android/data/com.example.tdycamera/files/1635497535274.mp4
+            mNextVideoAbsolutePath = null;
+            createPreviewAndImageReaderSession();
+        }
+
     }
 
     //是否是前置相机
@@ -899,6 +908,11 @@ public class Camera2Helper {
             facing = CameraCharacteristics.LENS_FACING_FRONT;
             isFrontCamera = true;
         }
+//        // 关闭当前相机
+//        if (mCameraDevice != null) {
+//            mCameraDevice.close();
+//            mCameraDevice = null;
+//        }
         closeCamera();
         openCamera();
     }
