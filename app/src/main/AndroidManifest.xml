@@ -47,11 +47,6 @@
             android:screenOrientation="portrait"
             android:theme="@style/fullScreen" />
         <activity
-            android:name=".mycamera.camera2.AutoCamera2Activity"
-            android:exported="true"
-            android:screenOrientation="portrait"
-            android:theme="@style/fullScreen" />
-        <activity
             android:name=".mycamera.camera2.Camera2Activity"
             android:exported="true"
             android:screenOrientation="portrait"

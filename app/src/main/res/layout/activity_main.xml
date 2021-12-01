@@ -50,23 +50,15 @@
             app:layout_constraintEnd_toEndOf="@+id/btn_camera2_basic"
             app:layout_constraintStart_toStartOf="@+id/btn_camera2_basic"
             app:layout_constraintTop_toBottomOf="@+id/btn_camera2_basic" />
-        <Button
-            android:id="@+id/btn_camera2_auto"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="不使用camera2auto"
-            app:layout_constraintEnd_toEndOf="@+id/btn_camera2_video"
-            app:layout_constraintStart_toStartOf="@+id/btn_camera2_video"
-            app:layout_constraintTop_toBottomOf="@+id/btn_camera2_video" />
 
         <Button
             android:id="@+id/btn_camera2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="使用工具类myCamera2"
-            app:layout_constraintEnd_toEndOf="@+id/btn_camera2_auto"
-            app:layout_constraintStart_toStartOf="@+id/btn_camera2_auto"
-            app:layout_constraintTop_toBottomOf="@+id/btn_camera2_auto" />
+            app:layout_constraintEnd_toEndOf="@+id/btn_camera2_video"
+            app:layout_constraintStart_toStartOf="@+id/btn_camera2_video"
+            app:layout_constraintTop_toBottomOf="@+id/btn_camera2_video" />
         <Button
             android:id="@+id/btn_camerax_demo"
             android:layout_width="match_parent"

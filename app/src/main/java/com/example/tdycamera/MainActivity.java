@@ -17,7 +17,6 @@ import androidx.core.content.ContextCompat;
 
 import com.example.tdycamera.demo.apicamera.CameraApiActivity;
 import com.example.tdycamera.mycamera.camera1.Camera1Activity;
-import com.example.tdycamera.mycamera.camera2.AutoCamera2Activity;
 import com.example.tdycamera.mycamera.camera2.Camera2Activity;
 import com.example.tdycamera.mycamera.camera2.basic.Camera2BasicActivity;
 import com.example.tdycamera.mycamera.camera2.video.Camera2VideoActivity;
@@ -35,7 +34,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private Button btnCameraApi;
     private Button btnCamera1;
     private Button btnCamera2;
-    private Button btnCamera2Auto;
     private Button btnCamera2Video;
     private Button btnCamera2Basic;
     private Button btnCameraxDemo;
@@ -60,7 +58,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera1 = findViewById(R.id.btn_camera1);
         btnCamera2 = findViewById(R.id.btn_camera2);
         btnCamera2Video = findViewById(R.id.btn_camera2_video);
-        btnCamera2Auto = findViewById(R.id.btn_camera2_auto);
         btnCamera2Basic = findViewById(R.id.btn_camera2_basic);
         btnCameraxDemo = findViewById(R.id.btn_camerax_demo);
         btnRecordAudio = findViewById(R.id.btn_record_audio);
@@ -71,7 +68,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera1.setOnClickListener(this);
         btnCamera2.setOnClickListener(this);
         btnCamera2Video.setOnClickListener(this);
-        btnCamera2Auto.setOnClickListener(this);
         btnCamera2Basic.setOnClickListener(this);
         btnCameraxDemo.setOnClickListener(this);
         btnRecordAudio.setOnClickListener(this);
@@ -94,9 +90,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 break;
             case R.id.btn_camera2_video:
                 startActivity(new Intent(this, Camera2VideoActivity.class));
-                break;
-            case R.id.btn_camera2_auto:
-                startActivity(new Intent(this, AutoCamera2Activity.class));
                 break;
             case R.id.btn_camera2_basic:
                 startActivity(new Intent(this, Camera2BasicActivity.class));

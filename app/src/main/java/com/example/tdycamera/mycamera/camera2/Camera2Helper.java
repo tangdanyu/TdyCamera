@@ -943,7 +943,7 @@ public class Camera2Helper {
         createPreviewAndPictureAndImageReaderSession();
     }
     /**
-     * Compares two {@code Size}s based on their areas.
+     * 比较两个Size的大小（基于它们的area）
      */
     static class CompareSizesByArea implements Comparator<Size> {
 
