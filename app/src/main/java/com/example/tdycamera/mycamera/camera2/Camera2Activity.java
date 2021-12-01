@@ -182,16 +182,17 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
                             newImage = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), mtx, true);
                         } else {// LANDSCAPE MODE
                             MyLogUtil.e(TAG, "后置");
-//                            Matrix mtx = new Matrix();
+
+                            Matrix mtx = new Matrix();
 //                            //这将防止镜像
 //                            mtx.preScale(-1.0f, 1.0f);
 //                            //将post rotate设置为90，因为图像可能位于横向
-//                            mtx.postRotate(270.f);
+                            mtx.postRotate(90.f);
 //                            //旋转位图，创建我们想要的真实图像
-//                            newImage = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), mtx, true);
+                            newImage = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), mtx, true);
 
                             //不需要反转宽度和高度
-                            newImage = bitmap;
+//                            newImage = bitmap;
                         }
                         Bitmap finalNewImage = newImage;
                         runOnUiThread(new Runnable() {
