@@ -27,7 +27,7 @@
             android:exported="true"
             android:label="@string/title_activity_camera1_settings" />
         <activity
-            android:name=".mycamera.camerax.CameraXBasicActivity"
+            android:name=".mycamera.camerax.CameraXActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             android:theme="@style/fullScreen" />

@@ -63,7 +63,7 @@
             android:id="@+id/btn_camerax_demo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="camerax官方demo"
+            android:text="camerax"
             app:layout_constraintEnd_toEndOf="@+id/btn_camera2"
             app:layout_constraintStart_toStartOf="@+id/btn_camera2"
             app:layout_constraintTop_toBottomOf="@+id/btn_camera2" />

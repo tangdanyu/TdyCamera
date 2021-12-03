@@ -20,7 +20,7 @@ import com.example.tdycamera.mycamera.camera1.Camera1Activity;
 import com.example.tdycamera.mycamera.camera2.Camera2Activity;
 import com.example.tdycamera.mycamera.camera2.basic.Camera2BasicActivity;
 import com.example.tdycamera.mycamera.camera2.video.Camera2VideoActivity;
-import com.example.tdycamera.mycamera.camerax.CameraXBasicActivity;
+import com.example.tdycamera.mycamera.camerax.CameraXActivity;
 import com.example.tdycamera.phonecamera.PhoneCameraActivity;
 import com.example.tdycamera.record.RecordAudioActivity;
 
@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 startActivity(new Intent(this, Camera2BasicActivity.class));
                 break;
             case R.id.btn_camerax_demo:
-                startActivity(new Intent(this, CameraXBasicActivity.class));
+                startActivity(new Intent(this, CameraXActivity.class));
                 break;
             case R.id.btn_record_audio:
                 startActivity(new Intent(this, RecordAudioActivity.class));

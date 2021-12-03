@@ -3,6 +3,7 @@ package com.example.tdycamera.mycamera.camerax;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Size;
@@ -31,16 +32,23 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class CameraXBasicActivity extends AppCompatActivity {
-    private String TAG = "CameraXBasicActivity";
-    private PreviewView previewView;
-    private CameraListener cameraListener;
-    private ProcessCameraProvider cameraProvider;
+public class CameraXActivity extends AppCompatActivity {
+    private String TAG = "CameraXActivity";
+    private int lensFacing = CameraSelector.LENS_FACING_FRONT;
     private Preview preview;
-    private Camera camera;
     private ImageCapture imageCapture;
     private ImageAnalysis imageAnalysis;
+    private Camera camera;
+    private ProcessCameraProvider cameraProvider;
+    private PreviewView previewView;
+
+    private ExecutorService cameraExecutor;
+    private double RATIO_4_3_VALUE = 4.0 / 3.0;
+    private double RATIO_16_9_VALUE = 16.0 / 9.0;
+    private CameraListener cameraListener;
     private VideoCapture mVideoCapture;
     private boolean bRecording;
 
@@ -66,6 +74,7 @@ public class CameraXBasicActivity extends AppCompatActivity {
                 .setTargetResolution(new Size(previewView.getWidth(), previewView.getHeight()))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_BLOCK_PRODUCER)
                 .build();
+        cameraExecutor = Executors.newSingleThreadExecutor();
     }
 
     private void startCameraX() {
@@ -82,10 +91,8 @@ public class CameraXBasicActivity extends AppCompatActivity {
 
     @SuppressLint("WrongConstant")
     private void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
-
-        cameraProvider.unbindAll();
         CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                .requireLensFacing(lensFacing)
                 .build();
 
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
@@ -178,4 +185,29 @@ public class CameraXBasicActivity extends AppCompatActivity {
                 }
         );
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //请求相机权限
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        cameraExecutor.shutdown();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+            // Workaround for Android Q memory leak issue in IRequestFinishCallback$Stub.
+            // (https://issuetracker.google.com/issues/139738913)
+            //IRequestFinishCallback$Stub中Android Q内存泄漏问题的解决方法。
+            finishAfterTransition();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
 }
