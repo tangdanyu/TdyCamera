@@ -1,70 +1,57 @@
 package com.example.tdycamera.mycamera.camerax;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.content.pm.PackageManager;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.app.Activity;
+import android.os.Build;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.media.ExifInterface;
-import android.net.Uri;
-import android.os.Build;
+import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Size;
+import android.provider.Settings;
+import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.Camera;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureException;
-import androidx.camera.core.ImageProxy;
-import androidx.camera.core.Preview;
-import androidx.camera.core.VideoCapture;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.view.PreviewView;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
+import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
 import com.example.tdycamera.R;
 import com.example.tdycamera.listener.CameraListener;
-import com.example.tdycamera.mycamera.camera1.Camera1SettingsActivity;
+import com.example.tdycamera.mnn.MNNDrawUtil;
+import com.example.tdycamera.mnn.MNNFaceDetectListener;
+import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
 import com.example.tdycamera.utils.MyLogUtil;
-import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import androidx.camera.view.PreviewView;
 
 public class CameraXActivity extends AppCompatActivity implements View.OnClickListener {
     private String TAG = "CameraXActivity";
-    private int lensFacing = CameraSelector.LENS_FACING_FRONT;
+    /****阿里Mnn相关*****/
+    private MNNFaceDetectorAdapter mnnFaceDetectorAdapter;  //阿里人脸识别工具类
+    private MNNFaceDetectListener mnnFaceDetectListener;    //阿里人脸识别
+    private MNNDrawUtil mnnDrawUtil;//特征点的绘制
+    private Activity activity;
 
-    private ImageCapture imageCapture;
-    private ImageAnalysis imageAnalysis;
+    private int mRotateDegree; // 屏幕旋转角度：0/90/180/270
+    private OrientationEventListener orientationListener;       // 监听屏幕旋转
+
+    //相机控制
+    private CameraXHelper cameraXHelper;
+    //相机数据回调
+    private CameraListener cameraListener;
+    //相机预览控件
     private PreviewView previewView;
     private ImageView previewIv;
+
+    private long lastTime = System.currentTimeMillis();
+
     private Button switchCameraBtn;
     private Button settingBtn;
     private Button takePictureBtn;
     private Button recordBtn;
-    private ExecutorService cameraExecutor;
-    private CameraListener cameraListener;
-    private VideoCapture mVideoCapture;
-    private boolean bRecording;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,13 +59,11 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
         setContentView(R.layout.activity_camerax);
-
+        activity = this;
         initView();
         initListener();
-        initCameraXPreview();
-        initCameraXAnalysis();
+        initData();
     }
 
     private void initView() {
@@ -88,7 +73,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         settingBtn = findViewById(R.id.setting_btn);
         takePictureBtn = findViewById(R.id.take_picture_btn);
         recordBtn = findViewById(R.id.record_btn);
-        cameraExecutor = Executors.newSingleThreadExecutor();
     }
 
     private void initListener() {
@@ -96,196 +80,127 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         settingBtn.setOnClickListener(this);
         takePictureBtn.setOnClickListener(this);
         recordBtn.setOnClickListener(this);
-    }
-
-    private void initCameraXPreview() {
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-        cameraProviderFuture.addListener(() -> {
-            try {
-                // 摄像机提供商现在保证可用
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                cameraProvider.unbindAll();
-                // 设置取景器用例以显示相机预览
-                Preview preview = new Preview.Builder().build();
-                // 设置取景器用例以显示相机预览
-                imageCapture = new ImageCapture.Builder()
-                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                        .build();
-
-                //通过要求镜头朝向来选择相机
-                CameraSelector cameraSelector = new CameraSelector.Builder()
-                        .requireLensFacing(lensFacing)
-                        .build();
-                // 将用例附加到具有相同生命周期所有者的相机
-                Camera camera = cameraProvider.bindToLifecycle(
-                        this,
-                        cameraSelector,
-                        preview,
-                        imageCapture);
-                // 将预览用例连接到previewView
-                preview.setSurfaceProvider(
-                        previewView.getSurfaceProvider());
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        }, ContextCompat.getMainExecutor(this));
-    }
-
-
-    //拍照保存到文件
-    private void cameraXCaptureToFile() {
-        String path = getExternalFilesDir(Environment.DIRECTORY_PICTURES).getAbsolutePath() + File.separator + System.currentTimeMillis() + ".jpg";
-        ImageCapture.OutputFileOptions outputFileOptions =
-                new ImageCapture.OutputFileOptions.Builder(new File(path)).build();
-        imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this),
-                new ImageCapture.OnImageSavedCallback() {
-                    @Override
-                    public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
-                        MyLogUtil.e(TAG, "onImageSaved : " + path);
-                        Bitmap bitmap = BitmapFactory.decodeFile(path);
-                        Bitmap newImage = null;
-                        if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
-                            MyLogUtil.e(TAG, "前置");
-                            //使用矩阵反转图像数据并保持其正常
-                            Matrix mtx = new Matrix();
-                            //这将防止镜像
-                            mtx.preScale(-1.0f, 1.0f);
-                            //将post rotate设置为90，因为图像可能位于横向
-//                            mtx.postRotate(90.f);
-                            //旋转位图，创建我们想要的真实图像
-                            newImage = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), mtx, true);
-                        } else {// LANDSCAPE MODE
-                            MyLogUtil.e(TAG, "后置");
-                            //不需要反转宽度和高度
-                            newImage = bitmap;
-                        }
-                        previewIv.setVisibility(View.VISIBLE);
-                        previewIv.setImageBitmap(newImage);
-                    }
-
-                    @Override
-                    public void onError(ImageCaptureException error) {
-                    }
-                });
-    }
-
-    //拍照返回视频帧
-    private void cameraXCaptureToImage() {
-
-        imageCapture.takePicture(ContextCompat.getMainExecutor(this), new
-                ImageCapture.OnImageCapturedCallback() {
-                    @RequiresApi(api = Build.VERSION_CODES.N)
-                    @Override
-                    public void onCaptureSuccess(ImageProxy image) {
-                        super.onCaptureSuccess(image);
-                        MyLogUtil.e(TAG, "onCaptureSuccess : " + image);
-                        // 将 imageProxy 转为 byte数组
-                        ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
-                        // 新建指定长度数组
-                        byte[] bytes = new byte[byteBuffer.remaining()];
-//                        // 倒带到起始位置 0
-//                        byteBuffer.rewind();
-//                        // 数据复制到数组, 这个 byteArray 包含有 exif 相关信息，
-//                        // 由于 bitmap 对象不会包含 exif 信息，所以转为 bitmap 需要注意保存 exif 信息
-                        byteBuffer.get(bytes);
-//                        // 获取照片 Exif 信息
-//                        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-//                        ExifInterface exif = null;
-//                        try {
-//                            exif = new ExifInterface(byteArrayInputStream);
-//                            String direction =exif.getAttribute(ExifInterface.TAG_ORIENTATION);   //获取图片方向
-//                            MyLogUtil.e(TAG,"获取图片方向"+direction);
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                        Bitmap newImage = null;
-                        if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
-                            MyLogUtil.e(TAG, "前置");
-                            //使用矩阵反转图像数据并保持其正常
-                            Matrix mtx = new Matrix();
-                            //这将防止镜像
-                            mtx.preScale(-1.0f, 1.0f);
-                            //将post rotate设置为90，因为图像可能位于横向
-//                            mtx.postRotate(90.f);
-                            //旋转位图，创建我们想要的真实图像
-                            newImage = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), mtx, true);
-                        } else {// LANDSCAPE MODE
-                            MyLogUtil.e(TAG, "后置");
-                            //不需要反转宽度和高度
-                            newImage = bitmap;
-                        }
-
-                        previewIv.setVisibility(View.VISIBLE);
-                        previewIv.setImageBitmap(newImage);
-                        //使用完image关闭
-                        image.close();
-
-                    }
-
-                    @Override
-                    public void onError(ImageCaptureException exception) {
-                        super.onError(exception);
-
-                    }
-                });
-
-
-    }
-
-    private void initCameraXAnalysis() {
-        imageAnalysis = new ImageAnalysis.Builder()
-                .setTargetResolution(new Size(previewView.getWidth(), previewView.getHeight()))
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_BLOCK_PRODUCER)
-                .build();
-        imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
+        cameraListener = new CameraListener() {
             @Override
-            public void analyze(@NonNull ImageProxy image) {
-                int rotationDegrees = image.getImageInfo().getRotationDegrees();
-                image.close();
+            public void onCameraOpened(int width, int height, int displayOrientation) {
+                // 设置画框用的surfaceView的展示尺寸，也是TextureView的展示尺寸（因为是竖屏，所以宽度比高度小）
+
+//                MyLogUtil.e(TAG,"width"+width+"height"+height);
+//                MyLogUtil.e(TAG, "getMeasuredWidth"+autoFitTextureView.getMeasuredWidth()+"getMeasuredHeight"+autoFitTextureView.getMeasuredHeight());
+                if (displayOrientation == 0 || displayOrientation == 180) {
+                    mnnDrawUtil = new MNNDrawUtil(activity,
+                            width, height, height, width, screenAutoRotate());
+                } else {
+                    mnnDrawUtil = new MNNDrawUtil(activity,
+                            width, height, width, height, screenAutoRotate());
+                }
             }
-        });
+
+            @Override
+            public void onCameraPreview(byte[] data, int width, int height, int displayOrientation) {
+//                MyLogUtil.e(TAG,"时间"+(System.currentTimeMillis() - lastTime)+" width"+width+" height"+height+" Orientation"+displayOrientation);//width1920 height960 Orientation270
+                lastTime = System.currentTimeMillis();
+                if (width <= 0 || height <= 0) {
+                    return;
+                }
+
+                if (mnnDrawUtil == null) {
+                    cameraListener.onCameraOpened(width, height, displayOrientation);
+                }
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        previewIv.setImageBitmap(ImageUtil.nv21ToBitmap(data, width, height, getBaseContext()));
+//                    }
+//                });
+
+                // 输入角度
+                int inAngle = cameraXHelper.isFrontCamera() ? (displayOrientation + 360 - mRotateDegree) % 360 : (displayOrientation + mRotateDegree) % 360;
+                // 输出角度
+                int outAngle = 0;
+
+                if (!screenAutoRotate()) {
+                    outAngle = cameraXHelper.isFrontCamera() ? (360 - mRotateDegree) % 360 : mRotateDegree % 360;
+                }
+//                MyLogUtil.e(TAG,"MNN"+" data="+data.length+" displayOrientation="+displayOrientation+" inAngle="+inAngle+" outAngle="+outAngle);//data=2764800 displayOrientation=270 inAngle=270 outAngle=0
+                FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height, 1, inAngle, outAngle, cameraXHelper.isFrontCamera());
+                if (mnnDrawUtil != null) {
+                    if (results != null) {
+                        mnnDrawUtil.drawResult(displayOrientation, mRotateDegree, results);
+                    } else {
+                        mnnDrawUtil.drawClear();
+                    }
+
+                }
+            }
+
+            @Override
+            public void onPictureTaken(byte[] data) {
+                Bitmap bitmap = null;
+                try {
+                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    if (bitmap != null) {
+                        Bitmap newImage = null;
+                        if (cameraXHelper.isFrontCamera()) {
+                            MyLogUtil.e(TAG, "前置");
+                            //使用矩阵反转图像数据并保持其正常
+                            Matrix mtx = new Matrix();
+                            //这将防止镜像
+                            mtx.preScale(-1.0f, 1.0f);
+                            //将post rotate设置为90，因为图像可能位于横向
+//                            mtx.postRotate(90.f);
+                            //旋转位图，创建我们想要的真实图像
+                            newImage = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), mtx, true);
+                        } else {// LANDSCAPE MODE
+                            MyLogUtil.e(TAG, "后置");
+                            //不需要反转宽度和高度
+                            newImage = bitmap;
+                        }
+                        previewIv.setVisibility(View.VISIBLE);
+                        previewIv.setImageBitmap(newImage);
+                    }
+                } catch (OutOfMemoryError e) {
+                    MyLogUtil.e(TAG, "Out of memory decoding image from camera." + e);
+                    return;
+                }
+            }
+        };
+
+        mnnFaceDetectListener = new MNNFaceDetectListener() {
+            @Override
+            public void onNoFaceDetected() {
+            }
+        };
+
+        // 监听屏幕的转动，mRotateDegree有四个值：0/90/180/270,0是平常的竖屏，然后依次顺时针旋转90°得到后三个值
+        orientationListener = new OrientationEventListener(this,
+                SensorManager.SENSOR_DELAY_NORMAL) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+
+                if (orientation == OrientationEventListener.ORIENTATION_UNKNOWN) {
+                    return;  //手机平放时，检测不到有效的角度
+                }
+
+                //可以根据不同角度检测处理，这里只检测四个角度的改变
+                // 可以扩展到多于四个的检测，以在不同角度都可以画出完美的框
+                // （要在对应的画框处添加多余角度的Canvas的旋转）
+                orientation = (orientation + 45) / 90 * 90;
+                mRotateDegree = orientation % 360;
+                //Log.d(TAG, "mRotateDegree: "+mRotateDegree);
+            }
+        };
+
+        if (orientationListener.canDetectOrientation()) {
+            orientationListener.enable();   // 开启此监听
+        } else {
+            orientationListener.disable();
+        }
     }
 
-    @SuppressLint("RestrictedApi")
-    public void recordVideo() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        if (bRecording) {
-            bRecording = false;
-            if (mVideoCapture != null) {
-                mVideoCapture.stopRecording();
-            }
-            return;
-        } else {
-            bRecording = true;
-        }
-
-        String path = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath() + File.separator + System.currentTimeMillis() + ".mp4";
-        MyLogUtil.e(TAG, "录制开始:" + path);
-        VideoCapture.OutputFileOptions outputFileOptions = new VideoCapture.OutputFileOptions.Builder(new File(path)).build();
-        mVideoCapture = new VideoCapture.Builder().build();
-        mVideoCapture.startRecording(outputFileOptions, ContextCompat.getMainExecutor(this),
-                new VideoCapture.OnVideoSavedCallback() {
-                    /**
-                     * Called when the video has been successfully saved.
-                     *
-                     * @param outputFileResults
-                     */
-                    @Override
-                    public void onVideoSaved(@NonNull VideoCapture.OutputFileResults outputFileResults) {
-                        MyLogUtil.e(TAG, "onVideoSaved 录制成功:" + path);
-                    }
-
-                    @Override
-                    public void onError(int videoCaptureError, @NonNull String message, @Nullable Throwable cause) {
-                        MyLogUtil.e(TAG, "onError 录制出错:" + message);
-                        bRecording = false;
-                    }
-                }
-        );
+    private void initData() {
+        cameraXHelper = new CameraXHelper(this, previewView, cameraListener);
+        mnnFaceDetectorAdapter = new MNNFaceDetectorAdapter(this, mnnFaceDetectListener);
     }
 
     @Override
@@ -295,9 +210,17 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     @Override
-    public void onDestroy() {
+    protected void onDestroy() {
+        orientationListener.disable();
+        if (mnnFaceDetectorAdapter != null) {
+            mnnFaceDetectorAdapter.close();
+            mnnFaceDetectorAdapter = null;
+        }
         super.onDestroy();
-        cameraExecutor.shutdown();
+        if (cameraXHelper != null) {
+//            cameraXHelper.onDestroy();
+            cameraXHelper = null;
+        }
     }
 
     @Override
@@ -312,26 +235,50 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 
     @Override
     public void onClick(View view) {
-
         switch (view.getId()) {
             case R.id.switch_camera_btn:
                 //切换摄像头，要先解绑生命周期再开启
                 MyLogUtil.e(TAG, "切换摄像头");
-                lensFacing = (lensFacing == CameraSelector.LENS_FACING_FRONT) ?
-                        CameraSelector.LENS_FACING_BACK : CameraSelector.LENS_FACING_FRONT;
-                initCameraXPreview();
+                if (cameraXHelper != null) {
+                    cameraXHelper.switchCamera();
+                }
                 break;
             case R.id.setting_btn:
 
                 break;
             case R.id.take_picture_btn:
-                cameraXCaptureToFile();
-//                cameraXCaptureToImage();
+                if (cameraXHelper != null) {
+                    cameraXHelper.takePicture();
+                }
                 break;
             case R.id.record_btn:
-
+                if (cameraXHelper != null) {
+                    if (cameraXHelper.isRecordVideo()) {
+                        if (cameraXHelper.isRecording()) {
+                            recordBtn.setText("开始录制");
+                            cameraXHelper.stopRecord();
+                        } else {
+                            recordBtn.setText("结束录制");
+                            cameraXHelper.startRecord();
+                        }
+                    } else {
+                        Toast.makeText(this, "没有开启录像", Toast.LENGTH_SHORT);
+                    }
+                }
                 break;
         }
     }
 
+    // 系统是否开启自动旋转
+    protected boolean screenAutoRotate() {
+
+        boolean autoRotate = false;
+        try {
+            autoRotate = 1 == Settings.System.getInt(getContentResolver(), Settings.System.ACCELEROMETER_ROTATION);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return autoRotate;
+    }
 }

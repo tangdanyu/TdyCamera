@@ -639,8 +639,9 @@ public class Camera2Helper {
             e.printStackTrace();
         }
     }
+
     private static Size getVideoSize(Size[] choices) {
-        MyLogUtil.e(TAG,"getVideoSize");
+        MyLogUtil.e(TAG, "getVideoSize");
         for (Size size : choices) {
             if (size.getWidth() == size.getHeight() * 4 / 3 && size.getWidth() <= 1080) {
                 return size;
@@ -723,8 +724,8 @@ public class Camera2Helper {
             float deltaRatioMin = Float.MAX_VALUE;
             for (Size option : choices) {
                 if (option.getWidth() < 240) continue;//1024表示可接受的最小尺寸，否则图像会很模糊，可以随意修改
-                if(Math.max(option.getWidth(),option.getHeight())>MAX_PREVIEW_WIDTH +1||
-                        Math.min(option.getWidth(),option.getHeight())>MAX_PREVIEW_HEIGHT+1){
+                if (Math.max(option.getWidth(), option.getHeight()) > MAX_PREVIEW_WIDTH + 1 ||
+                        Math.min(option.getWidth(), option.getHeight()) > MAX_PREVIEW_HEIGHT + 1) {
                     continue;
                 }//不能超过这个，否则录制视频会花
                 curRatio = ((float) option.getWidth()) / option.getHeight();
@@ -867,7 +868,8 @@ public class Camera2Helper {
     public boolean isRecording() {
         return isRecording;
     }
-    public boolean isRecordVideo(){
+
+    public boolean isRecordVideo() {
         return isRecordVideo;
     }
 
@@ -942,6 +944,7 @@ public class Camera2Helper {
         MyLogUtil.e(TAG, "capture");
         createPreviewAndPictureAndImageReaderSession();
     }
+
     /**
      * 比较两个Size的大小（基于它们的area）
      */

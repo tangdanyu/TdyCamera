@@ -1,12 +1,11 @@
 package com.example.tdycamera.mycamera.camera2;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.hardware.SensorManager;
+import android.media.Image;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.OrientationEventListener;
@@ -14,8 +13,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.media.Image;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
 import com.example.tdycamera.R;
@@ -26,6 +26,7 @@ import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
 import com.example.tdycamera.utils.ImageUtil;
 import com.example.tdycamera.utils.MyLogUtil;
 import com.example.tdycamera.view.AutoFitTextureView;
+
 import java.nio.ByteBuffer;
 
 public class Camera2Activity extends AppCompatActivity implements View.OnClickListener {
@@ -96,8 +97,9 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
                             width, height, width, height, screenAutoRotate());
                 }
             }
+
             @Override
-            public void onPreviewFrame(Image image,int width,int height,int displayOrientation){
+            public void onPreviewFrame(Image image, int width, int height, int displayOrientation) {
                 lastTime = System.currentTimeMillis();
                 ByteBuffer bufferY = image.getPlanes()[0].getBuffer();
                 ByteBuffer bufferU = image.getPlanes()[1].getBuffer();
@@ -111,7 +113,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
 
                 byte[] data = yuvbuffer.array();
 
-                MyLogUtil.e(TAG,"耗时="+(System.currentTimeMillis() - lastTime));//7ms
+                MyLogUtil.e(TAG, "耗时=" + (System.currentTimeMillis() - lastTime));//7ms
                 int inAngle = camera2Helper.isFrontCamera() ? (displayOrientation + 360 - mRotateDegree) % 360 : (displayOrientation + mRotateDegree) % 360;
                 int outAngle = 0;
                 if (!screenAutoRotate()) {
@@ -171,7 +173,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
                     if (bitmap != null) {
                         Bitmap newImage = null;
                         if (camera2Helper.isFrontCamera()) {
-                            MyLogUtil.e(TAG,"前置");
+                            MyLogUtil.e(TAG, "前置");
                             //使用矩阵反转图像数据并保持其正常
                             Matrix mtx = new Matrix();
                             //这将防止镜像
@@ -277,7 +279,7 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.switch_camera_btn:
-                if(camera2Helper!= null){
+                if (camera2Helper != null) {
                     camera2Helper.switchCamera();
                 }
                 break;
@@ -285,13 +287,13 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
 //                startActivity(new Intent(getBaseContext(), Camera1SettingsActivity.class));
                 break;
             case R.id.take_picture_btn:
-                if(camera2Helper!= null) {
+                if (camera2Helper != null) {
                     camera2Helper.takePicture();
                 }
                 break;
             case R.id.record_btn:
-                if(camera2Helper!= null) {
-                    if(camera2Helper.isRecordVideo()){
+                if (camera2Helper != null) {
+                    if (camera2Helper.isRecordVideo()) {
                         if (camera2Helper.isRecording()) {
                             recordBtn.setText("开始录制");
                             camera2Helper.stopRecord();
@@ -299,8 +301,8 @@ public class Camera2Activity extends AppCompatActivity implements View.OnClickLi
                             recordBtn.setText("结束录制");
                             camera2Helper.startRecord();
                         }
-                    }else {
-                        Toast.makeText(this,"没有开启录像",Toast.LENGTH_SHORT);
+                    } else {
+                        Toast.makeText(this, "没有开启录像", Toast.LENGTH_SHORT);
                     }
                 }
                 break;

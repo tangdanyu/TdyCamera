@@ -1,7 +1,5 @@
 package com.example.tdycamera.mycamera.camera1;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -17,6 +15,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
 import com.example.tdycamera.R;
 import com.example.tdycamera.listener.CameraListener;
@@ -25,7 +25,6 @@ import com.example.tdycamera.mnn.MNNFaceDetectListener;
 import com.example.tdycamera.mnn.MNNFaceDetectorAdapter;
 import com.example.tdycamera.utils.MyLogUtil;
 import com.example.tdycamera.view.AutoFitTextureView;
-import com.example.tdycamera.view.FocusView;
 
 public class Camera1Activity extends AppCompatActivity implements View.OnClickListener {
     private String TAG = "Camera1Activity";
@@ -45,8 +44,6 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
     //相机预览控件
     private AutoFitTextureView autoFitTextureView;
     private ImageView previewIv;
-
-    private long lastTime = System.currentTimeMillis();
 
     private Button switchCameraBtn;
     private Button settingBtn;
@@ -99,7 +96,6 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
             @Override
             public void onCameraPreview(byte[] data, int width, int height, int displayOrientation) {
 //                MyLogUtil.e(TAG,"时间"+(System.currentTimeMillis() - lastTime)+" width"+width+" height"+height+" Orientation"+displayOrientation);//width1920 height960 Orientation270
-                lastTime = System.currentTimeMillis();
                 if (width <= 0 || height <= 0) {
                     return;
                 }
@@ -240,7 +236,7 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.record_btn:
                 if (camera1Helper != null) {
-                    if(camera1Helper.isRecordVideo()){
+                    if (camera1Helper.isRecordVideo()) {
                         if (camera1Helper.isRecording()) {
                             recordBtn.setText("开始录制");
                             camera1Helper.stopRecord();
@@ -248,8 +244,8 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
                             recordBtn.setText("结束录制");
                             camera1Helper.startRecord();
                         }
-                    }else {
-                        Toast.makeText(this,"没有开启录像",Toast.LENGTH_SHORT);
+                    } else {
+                        Toast.makeText(this, "没有开启录像", Toast.LENGTH_SHORT);
                     }
                 }
                 break;
