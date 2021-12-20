@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
+import com.alibaba.android.mnnkit.entity.MNNCVImageFormat;
 import com.example.tdycamera.R;
 import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mnn.MNNDrawUtil;
@@ -123,7 +124,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                     outAngle = cameraXHelper.isFrontCamera() ? (360 - mRotateDegree) % 360 : mRotateDegree % 360;
                 }
 //                MyLogUtil.e(TAG,"MNN"+" data="+data.length+" displayOrientation="+displayOrientation+" inAngle="+inAngle+" outAngle="+outAngle);//data=2764800 displayOrientation=270 inAngle=270 outAngle=0
-                FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height, 1, inAngle, outAngle, cameraXHelper.isFrontCamera());
+                FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height,  MNNCVImageFormat.YUV_NV21.format, inAngle, outAngle, cameraXHelper.isFrontCamera());
                 if (mnnDrawUtil != null) {
                     if (results != null) {
                         mnnDrawUtil.drawResult(displayOrientation, mRotateDegree, results);

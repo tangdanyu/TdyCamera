@@ -35,24 +35,24 @@ public class MNNFaceDetectorAdapter {
 
             @Override
             public void onFailed(int i, Error error) {
-                Log.e( TAG, "create face detetector failed: " + error);
+                Log.e(TAG, "create face detetector failed: " + error);
             }
         });
         this.mnnFaceDetectListener = mnnFaceDetectListener;
     }
 
     @NonNull
-    public  FaceDetectionReport[] getFace(Bitmap bitmap, int inAngle, int outAngle, boolean isFrontCamera) {
-        if (null ==bitmap  || null == mFaceDetector) {
+    public FaceDetectionReport[] getFace(Bitmap bitmap, int inAngle, int outAngle, boolean isFrontCamera) {
+        if (null == bitmap || null == mFaceDetector) {
             return null;
         }
         FaceDetectionReport[] results = null;
-        long detectConfig =0;//关于眨眼张嘴等配置
-        MNNFlipType outputFlip = isFrontCamera?MNNFlipType.FLIP_Y:MNNFlipType.FLIP_NONE;//是否翻转
-        results = mFaceDetector.inference(bitmap, detectConfig, inAngle, outAngle,outputFlip);
-        if (results!=null && results.length>0) {
+        long detectConfig = 0;//关于眨眼张嘴等配置
+        MNNFlipType outputFlip = isFrontCamera ? MNNFlipType.FLIP_Y : MNNFlipType.FLIP_NONE;//是否翻转
+        results = mFaceDetector.inference(bitmap, detectConfig, inAngle, outAngle, outputFlip);
+        if (results != null && results.length > 0) {
             return results;
-        }else {
+        } else {
             if (mnnFaceDetectListener != null) {
                 mnnFaceDetectListener.onNoFaceDetected();
             }
@@ -61,22 +61,38 @@ public class MNNFaceDetectorAdapter {
     }
 
     @NonNull
-    public  FaceDetectionReport[] getFace(byte[] bytebuffer, int width, int height,int imageFormat,int inAngle,int outAngle,boolean isFrontCamera) {
-        if (null ==bytebuffer  || null == mFaceDetector) {
+    public FaceDetectionReport[] getFace(byte[] bytebuffer, int width, int height, int imageFormat, int inAngle, int outAngle, boolean isFrontCamera) {
+        if (null == bytebuffer || null == mFaceDetector) {
             return null;
         }
         FaceDetectionReport[] results = null;
         //关于眨眼张嘴等配置
 //        long detectConfig =0;不配置
-        long detectConfig = FaceDetectConfig.ACTIONTYPE_EYE_BLINK| FaceDetectConfig.ACTIONTYPE_MOUTH_AH|FaceDetectConfig.ACTIONTYPE_HEAD_YAW|FaceDetectConfig.ACTIONTYPE_HEAD_PITCH|FaceDetectConfig.ACTIONTYPE_BROW_JUMP;
-        MNNFlipType outputFlip = isFrontCamera?MNNFlipType.FLIP_Y:MNNFlipType.FLIP_NONE;//是否翻转
-        if(imageFormat == 1){
-             results = mFaceDetector.inference(bytebuffer, width, height,
-                    MNNCVImageFormat.YUV_NV21, detectConfig, inAngle, outAngle,outputFlip);
+        long detectConfig = FaceDetectConfig.ACTIONTYPE_EYE_BLINK | FaceDetectConfig.ACTIONTYPE_MOUTH_AH | FaceDetectConfig.ACTIONTYPE_HEAD_YAW | FaceDetectConfig.ACTIONTYPE_HEAD_PITCH | FaceDetectConfig.ACTIONTYPE_BROW_JUMP;
+        MNNFlipType outputFlip = isFrontCamera ? MNNFlipType.FLIP_Y : MNNFlipType.FLIP_NONE;//是否翻转
+        if (imageFormat == MNNCVImageFormat.YUV_NV21.format) {
+            results = mFaceDetector.inference(bytebuffer, width, height,
+                    MNNCVImageFormat.YUV_NV21, detectConfig, inAngle, outAngle, outputFlip);
+        } else if (imageFormat == MNNCVImageFormat.RGBA.format) {
+            results = mFaceDetector.inference(bytebuffer, width, height,
+                    MNNCVImageFormat.RGBA, detectConfig, inAngle, outAngle, outputFlip);
+        } else if (imageFormat == MNNCVImageFormat.RGB.format) {
+            results = mFaceDetector.inference(bytebuffer, width, height,
+                    MNNCVImageFormat.RGB, detectConfig, inAngle, outAngle, outputFlip);
+
+        } else if (imageFormat == MNNCVImageFormat.BGR.format) {
+            results = mFaceDetector.inference(bytebuffer, width, height,
+                    MNNCVImageFormat.BGR, detectConfig, inAngle, outAngle, outputFlip);
+        } else if (imageFormat == MNNCVImageFormat.GRAY.format) {
+            results = mFaceDetector.inference(bytebuffer, width, height,
+                    MNNCVImageFormat.GRAY, detectConfig, inAngle, outAngle, outputFlip);
+        } else if (imageFormat == MNNCVImageFormat.BGRA.format) {
+            results = mFaceDetector.inference(bytebuffer, width, height,
+                    MNNCVImageFormat.BGRA, detectConfig, inAngle, outAngle, outputFlip);
         }
-        if (results!=null && results.length>0) {
-           return results;
-        }else {
+        if (results != null && results.length > 0) {
+            return results;
+        } else {
             if (mnnFaceDetectListener != null) {
                 mnnFaceDetectListener.onNoFaceDetected();
             }
