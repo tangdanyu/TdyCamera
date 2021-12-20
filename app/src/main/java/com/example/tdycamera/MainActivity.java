@@ -21,7 +21,8 @@ import com.example.tdycamera.mycamera.camera2.Camera2Activity;
 import com.example.tdycamera.mycamera.camera2.basic.Camera2BasicActivity;
 import com.example.tdycamera.mycamera.camera2.video.Camera2VideoActivity;
 import com.example.tdycamera.mycamera.camerax.CameraXActivity;
-import com.example.tdycamera.mycamera.opencv.OpencvCameraActivity;
+import com.example.tdycamera.mycamera.opencv.OpencvCamera1Activity;
+import com.example.tdycamera.mycamera.opencv.OpencvCamera2Activity;
 import com.example.tdycamera.phonecamera.PhoneCameraActivity;
 import com.example.tdycamera.record.RecordAudioActivity;
 
@@ -39,7 +40,8 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private Button btnCamera2Basic;
     private Button btnCameraxDemo;
     private Button btnRecordAudio;
-    private Button btnOpencvCamera;
+    private Button btnOpencvCamera1;
+    private Button btnOpencvCamera2;
 
 
     private int REQUEST_CAMERA_PERMISSION = 100;
@@ -63,7 +65,8 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera2Basic = findViewById(R.id.btn_camera2_basic);
         btnCameraxDemo = findViewById(R.id.btn_camerax_demo);
         btnRecordAudio = findViewById(R.id.btn_record_audio);
-        btnOpencvCamera = findViewById(R.id.btn_opencv_camera);
+        btnOpencvCamera1 = findViewById(R.id.btn_opencv_camera1);
+        btnOpencvCamera2 = findViewById(R.id.btn_opencv_camera2);
     }
     private void initListener(){
         btnPhoneCamera.setOnClickListener(this);
@@ -74,7 +77,8 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera2Basic.setOnClickListener(this);
         btnCameraxDemo.setOnClickListener(this);
         btnRecordAudio.setOnClickListener(this);
-        btnOpencvCamera.setOnClickListener(this);
+        btnOpencvCamera1.setOnClickListener(this);
+        btnOpencvCamera2.setOnClickListener(this);
     }
 
     @Override
@@ -104,8 +108,11 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
             case R.id.btn_record_audio:
                 startActivity(new Intent(this, RecordAudioActivity.class));
                 break;
-            case R.id.btn_opencv_camera:
-                startActivity(new Intent(this, OpencvCameraActivity.class));
+            case R.id.btn_opencv_camera1:
+                startActivity(new Intent(this, OpencvCamera1Activity.class));
+                break;
+            case R.id.btn_opencv_camera2:
+                startActivity(new Intent(this, OpencvCamera2Activity.class));
                 break;
         }
     }

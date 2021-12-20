@@ -17,6 +17,10 @@ public class OpencvCamera1Helper extends JavaCameraView implements Camera.Pictur
     private static final String TAG = "OpencvCamera1Helper";
     private String mPictureFileName;
 
+    public OpencvCamera1Helper(Context context, int cameraId) {
+        super(context, cameraId);
+    }
+
     public OpencvCamera1Helper(Context context, AttributeSet attrs) {
         super(context, attrs);
     }

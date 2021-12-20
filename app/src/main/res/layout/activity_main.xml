@@ -84,13 +84,23 @@
             app:layout_constraintTop_toBottomOf="@+id/btn_camerax_demo" />
 
         <Button
-            android:id="@+id/btn_opencv_camera"
+            android:id="@+id/btn_opencv_camera1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAllCaps="false"
-            android:text="opencv camera"
+            android:text="opencv camera1"
             app:layout_constraintEnd_toEndOf="@+id/btn_record_audio"
             app:layout_constraintStart_toStartOf="@+id/btn_record_audio"
             app:layout_constraintTop_toBottomOf="@+id/btn_record_audio" />
+
+        <Button
+            android:id="@+id/btn_opencv_camera2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:text="opencv camera2"
+            app:layout_constraintEnd_toEndOf="@+id/btn_opencv_camera1"
+            app:layout_constraintStart_toStartOf="@+id/btn_opencv_camera1"
+            app:layout_constraintTop_toBottomOf="@+id/btn_opencv_camera1" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

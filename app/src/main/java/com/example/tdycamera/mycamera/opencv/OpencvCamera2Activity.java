@@ -1,5 +1,7 @@
 package com.example.tdycamera.mycamera.opencv;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.hardware.SensorManager;
@@ -15,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.alibaba.android.mnnkit.entity.FaceDetectionReport;
+import com.alibaba.android.mnnkit.entity.MNNCVImageFormat;
 import com.example.tdycamera.R;
 import com.example.tdycamera.listener.CameraListener;
 import com.example.tdycamera.mnn.MNNDrawUtil;
@@ -31,15 +34,14 @@ import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-public class OpencvCameraActivity extends CameraActivity implements CameraBridgeViewBase.CvCameraViewListener, View.OnClickListener {
-    private static final String TAG = "OpencvCameraActivity";
+public class OpencvCamera2Activity extends CameraActivity implements CameraBridgeViewBase.CvCameraViewListener2, View.OnClickListener {
+    private static final String TAG = "OpencvCamera2Activity";
     /****阿里Mnn相关*****/
     private MNNFaceDetectorAdapter mnnFaceDetectorAdapter;  //阿里人脸识别工具类
     private MNNFaceDetectListener mnnFaceDetectListener;    //阿里人脸识别
@@ -49,12 +51,10 @@ public class OpencvCameraActivity extends CameraActivity implements CameraBridge
     private int mRotateDegree; // 屏幕旋转角度：0/90/180/270
     private OrientationEventListener orientationListener;       // 监听屏幕旋转
 
-    //相机控制
-    private OpencvCamera1Helper mOpenCvCameraView;
     //相机数据回调
     private CameraListener cameraListener;
     //相机预览控件
-//    private CameraBridgeViewBase mOpenCvCameraView;
+    private OpencvCamera2Helper mOpenCvCameraView;
     private ImageView previewIv;
 
     private Button switchCameraBtn;
@@ -62,9 +62,9 @@ public class OpencvCameraActivity extends CameraActivity implements CameraBridge
     private Button takePictureBtn;
     private Button recordBtn;
 
-    Mat mRgba;
-    Mat mRgbaF;
-    Mat mRgbaT;
+    private Mat mRgba;
+    private Mat mGray;
+
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 
         @Override
@@ -93,7 +93,7 @@ public class OpencvCameraActivity extends CameraActivity implements CameraBridge
 //        mOpenCvCameraView = (CameraBridgeViewBase) new JavaCameraView(this, -1);
 //        setContentView(mOpenCvCameraView);
 //        mOpenCvCameraView.setVisibility(CameraBridgeViewBase.VISIBLE);
-        setContentView(R.layout.activity_opencv_camera);
+        setContentView(R.layout.activity_opencv_camera2);
         activity = this;
         initView();
         initListener();
@@ -110,7 +110,7 @@ public class OpencvCameraActivity extends CameraActivity implements CameraBridge
 
         mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        mOpenCvCameraView.setCameraIndex(1);//0为后置，1为前置
+//        mOpenCvCameraView.setCameraIndex(1);//0为后置，1为前置
     }
 
     private void initListener() {
@@ -136,21 +136,21 @@ public class OpencvCameraActivity extends CameraActivity implements CameraBridge
                     return;
                 }
 
-                // 输入角度
-                int inAngle = mOpenCvCameraView.isFrontCamera() ? (displayOrientation + 360 - mRotateDegree) % 360 : (displayOrientation + mRotateDegree) % 360;
-                // 输出角度
-                int outAngle = 0;
-
-                if (!screenAutoRotate()) {
-                    outAngle = mOpenCvCameraView.isFrontCamera() ? (360 - mRotateDegree) % 360 : mRotateDegree % 360;
-                }
-//                MyLogUtil.e(TAG,"MNN"+" data="+data.length+" displayOrientation="+displayOrientation+" inAngle="+inAngle+" outAngle="+outAngle);//data=2764800 displayOrientation=270 inAngle=270 outAngle=0
-                FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height, 1, inAngle, outAngle, mOpenCvCameraView.isFrontCamera());
-                if (results != null) {
-                    mnnDrawUtil.drawResult(displayOrientation, mRotateDegree, results);
-                } else {
-                    mnnDrawUtil.drawClear();
-                }
+//                // 输入角度
+//                int inAngle = mOpenCvCameraView.isFrontCamera() ? (displayOrientation + 360 - mRotateDegree) % 360 : (displayOrientation + mRotateDegree) % 360;
+//                // 输出角度
+//                int outAngle = 0;
+//
+//                if (!screenAutoRotate()) {
+//                    outAngle = mOpenCvCameraView.isFrontCamera() ? (360 - mRotateDegree) % 360 : mRotateDegree % 360;
+//                }
+////                MyLogUtil.e(TAG,"MNN"+" data="+data.length+" displayOrientation="+displayOrientation+" inAngle="+inAngle+" outAngle="+outAngle);//data=2764800 displayOrientation=270 inAngle=270 outAngle=0
+//                FaceDetectionReport[] results = mnnFaceDetectorAdapter.getFace(data, width, height,  MNNCVImageFormat.YUV_NV21.format, inAngle, outAngle, mOpenCvCameraView.isFrontCamera());
+//                if (results != null) {
+//                    mnnDrawUtil.drawResult(displayOrientation, mRotateDegree, results);
+//                } else {
+//                    mnnDrawUtil.drawClear();
+//                }
             }
         };
 
@@ -241,7 +241,7 @@ public class OpencvCameraActivity extends CameraActivity implements CameraBridge
                 String currentDateandTime = sdf.format(new Date());
                 String fileName = Environment.getExternalStorageDirectory().getPath() +
                         "/sample_picture_" + currentDateandTime + ".jpg";
-                mOpenCvCameraView.takePicture(fileName);
+//                mOpenCvCameraView.takePicture(fileName);
                 Toast.makeText(this, fileName + " saved", Toast.LENGTH_SHORT).show();
                 MyLogUtil.e(TAG,"拍照="+fileName);
                 break;
@@ -280,31 +280,35 @@ public class OpencvCameraActivity extends CameraActivity implements CameraBridge
         MyLogUtil.e(TAG, "width=" + width + " height=" + height);// width=960 height=720
         cameraListener.onCameraOpened(width, height, mOpenCvCameraView.getDisplay().getRotation());
         mRgba = new Mat(height, width, CvType.CV_8UC4);
-        mRgbaF = new Mat(height, width, CvType.CV_8UC4);
-        mRgbaT = new Mat(width, width, CvType.CV_8UC4);
+        mGray = new Mat(height, width, CvType.CV_8UC4);
+
     }
 
     public void onCameraViewStopped() {
     }
 
+    @Override
+    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame cvCameraViewFrame) {
+        mRgba = cvCameraViewFrame.rgba();
+        mGray = cvCameraViewFrame.gray();
+        if(mOpenCvCameraView.isFrontCamera()){
+            Core.flip(mRgba, mRgba, 1);//解决前置倒置问题
+        }
 
-    public Mat onCameraFrame(Mat inputFrame) {
-
-        // width=960 height=720
-//        Bitmap bitmap = Bitmap.createBitmap(inputFrame.width(), inputFrame.height(), Bitmap.Config.ARGB_8888);
-//        Utils.matToBitmap(inputFrame, bitmap, true);//添加透明度
+//        Bitmap bitmap = Bitmap.createBitmap(mRgba.width(), mRgba.height(), Bitmap.Config.ARGB_8888);
+//        Utils.matToBitmap(mRgba, bitmap, true);//添加透明度
 //        runOnUiThread(new Runnable() {
 //            @Override
 //            public void run() {
-//                previewIv.setVisibility(View.VISIBLE);
+////                previewIv.setVisibility(View.VISIBLE);
 //                previewIv.setImageBitmap(bitmap);
+////                previewIv.setImageBitmap(ImageUtil.nv21ToBitmap(nv21, inputFrame.width(), inputFrame.height(), getBaseContext()));
 //            }
 //        });
-        if (mOpenCvCameraView.isFrontCamera()) {
-            Core.flip(inputFrame, inputFrame, 1);//解决前置倒置问题
-        }
-
-        return inputFrame;
+        return mRgba;
     }
+
+
+
 
 }
