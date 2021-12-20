@@ -21,6 +21,7 @@ import com.example.tdycamera.mycamera.camera2.Camera2Activity;
 import com.example.tdycamera.mycamera.camera2.basic.Camera2BasicActivity;
 import com.example.tdycamera.mycamera.camera2.video.Camera2VideoActivity;
 import com.example.tdycamera.mycamera.camerax.CameraXActivity;
+import com.example.tdycamera.mycamera.opencv.OpencvCameraActivity;
 import com.example.tdycamera.phonecamera.PhoneCameraActivity;
 import com.example.tdycamera.record.RecordAudioActivity;
 
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private Button btnCamera2Basic;
     private Button btnCameraxDemo;
     private Button btnRecordAudio;
+    private Button btnOpencvCamera;
 
 
     private int REQUEST_CAMERA_PERMISSION = 100;
@@ -61,6 +63,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera2Basic = findViewById(R.id.btn_camera2_basic);
         btnCameraxDemo = findViewById(R.id.btn_camerax_demo);
         btnRecordAudio = findViewById(R.id.btn_record_audio);
+        btnOpencvCamera = findViewById(R.id.btn_opencv_camera);
     }
     private void initListener(){
         btnPhoneCamera.setOnClickListener(this);
@@ -71,6 +74,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btnCamera2Basic.setOnClickListener(this);
         btnCameraxDemo.setOnClickListener(this);
         btnRecordAudio.setOnClickListener(this);
+        btnOpencvCamera.setOnClickListener(this);
     }
 
     @Override
@@ -99,6 +103,9 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 break;
             case R.id.btn_record_audio:
                 startActivity(new Intent(this, RecordAudioActivity.class));
+                break;
+            case R.id.btn_opencv_camera:
+                startActivity(new Intent(this, OpencvCameraActivity.class));
                 break;
         }
     }
