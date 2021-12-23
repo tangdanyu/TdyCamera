@@ -18,6 +18,7 @@ public class OpencvCamera2Helper extends JavaCamera2View {
 
     private static final String TAG = "OpencvCamera1Helper";
     private String mPictureFileName;
+
     public OpencvCamera2Helper(Context context, int cameraId) {
         super(context, cameraId);
     }
@@ -31,24 +32,25 @@ public class OpencvCamera2Helper extends JavaCamera2View {
         this.mPictureFileName = fileName;
 
     }
+
     //切换摄像头，要先停止再开启
     public void switchCamera() {
-        MyLogUtil.e(TAG, "切换摄像头 1 " +mCameraIndex);
-        if ( mCameraIndex == CameraBridgeViewBase.CAMERA_ID_BACK ){
+        MyLogUtil.e(TAG, "切换摄像头 1 " + mCameraIndex);
+        disableView();//要先不可见，否则会先倒立再切换
+        if (mCameraIndex == -1) {
             mCameraIndex = CameraBridgeViewBase.CAMERA_ID_FRONT;
-        }else {
+        } else if (mCameraIndex == CameraBridgeViewBase.CAMERA_ID_BACK) {
+            mCameraIndex = CameraBridgeViewBase.CAMERA_ID_FRONT;
+        } else {
             mCameraIndex = CameraBridgeViewBase.CAMERA_ID_BACK;
         }
-        mCameraIndex = (mCameraIndex == CameraBridgeViewBase.CAMERA_ID_BACK ) ?
-                CameraBridgeViewBase.CAMERA_ID_BACK :  CameraBridgeViewBase.CAMERA_ID_FRONT;
-        MyLogUtil.e(TAG, "切换摄像头 2 " +mCameraIndex);
-        disconnectCamera();
-        disableView();
+        MyLogUtil.e(TAG, "切换摄像头 2 " + mCameraIndex);
         enableView();
     }
+
     //是否是前置摄像头
     public boolean isFrontCamera() {
-        return  mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT || mCameraIndex == 1;
+        return mCameraIndex == CameraBridgeViewBase.CAMERA_ID_FRONT || mCameraIndex == 1;
     }
 
 }
