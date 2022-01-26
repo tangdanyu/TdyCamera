@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
+import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -52,8 +53,9 @@ public class Camera1Helper implements Camera.PreviewCallback,
     private Camera.CameraInfo mCameraInfo = new Camera.CameraInfo();    //相机信息
     private Camera.Parameters mCameraParameters;    //相机参数
     private Camera.Size mPreviewSize;               //预览尺寸 默认是横屏width>height
+    private Size mSpecialSize;                      //指定尺寸
     private Camera.Size mPictureSize;               //照片尺寸
-    private Camera.Size mVideoSize;                        //录制视频尺寸 尺寸不要大于1080p，因为MediaRecorder无法处理如此高分辨率的视频。
+    private Camera.Size mVideoSize;                 //录制视频尺寸 尺寸不要大于1080p，因为MediaRecorder无法处理如此高分辨率的视频。
     private int screenWidth, screenHeight;          //屏幕宽高 竖屏状态下width<height
     private CameraListener cameraListener;          //相机事件回调
     private int imageFormat = ImageFormat.NV21;     //视频帧格式
@@ -107,7 +109,9 @@ public class Camera1Helper implements Camera.PreviewCallback,
         public void onSurfaceTextureUpdated(SurfaceTexture texture) {
         }
     };
-
+    public void setSpecialSize(int width,int height) {
+        this.mSpecialSize = new Size(width,height);
+    }
     // 预览控件与相机关联
     private SurfaceHolder.Callback mSurfaceHolderCallback = new SurfaceHolder.Callback() {
         @Override
@@ -323,6 +327,10 @@ public class Camera1Helper implements Camera.PreviewCallback,
         if (closelySize != null) {
             MyLogUtil.e(TAG, "预览尺寸修改为：" + closelySize.width + "*" + closelySize.height);
             mPreviewSize = closelySize;
+            if(mSpecialSize != null && mSpecialSize.getWidth()>0 &&mSpecialSize.getHeight()>0){
+                mPreviewSize.width = mSpecialSize.getWidth();
+                mPreviewSize.height = mSpecialSize.getHeight();
+            }
             if (mPreviewDisplayView instanceof TextureView) {
                 ((AutoFitTextureView) mPreviewDisplayView).setAspectRatio(mPreviewSize.height, mPreviewSize.width);
             }

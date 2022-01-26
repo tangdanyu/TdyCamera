@@ -1,6 +1,7 @@
 package com.example.tdycamera.view;
 
 import android.content.Context;
+import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.view.TextureView;
 
@@ -57,9 +58,43 @@ public class AutoFitTextureView extends TextureView {
             if (width > height * mRatioWidth / mRatioHeight) {
                 setMeasuredDimension(width, width * mRatioHeight / mRatioWidth);
             } else {
-                setMeasuredDimension(height * mRatioWidth / mRatioHeight, height);
+                setTransform(transformSurface(width,height,mRatioWidth,mRatioHeight));
+//                setMeasuredDimension(height * mRatioWidth / mRatioHeight, height);
+
             }
         }
     }
-
+    /**
+     * 根据实际预览的尺寸来计算Surface的缩放与移动大小
+     * 必须把Surface显示的与实现拍摄的预览界面的比较一致, 先调整比例,再调整偏移, 这样预览的效果即不会拉伸,拍出来的效果也与实际一致
+     * @param sw surface的宽
+     * @param sh surface的高
+     * @param prew Camera.Size 预览宽,注意相机的旋转90
+     * @param preh Camera.Size 预览高,注意相机的旋转90
+     * @return 返回的Matrix中包含着X轴或者Y轴的缩放比例与偏移
+     */
+    private Matrix transformSurface(int sw, int sh, int prew, int preh) {
+        Matrix matrix = new Matrix();
+        float preScale = preh / (float) prew;
+        float viewScale = sh / (float) sw;
+        if (preScale != viewScale) {//宽高比例不一样,才需要做处理
+            if (preScale > viewScale) {//将高宽比例较大的放到屏幕上显示, 所以需要截掉预览的一部分高, 即Y轴偏移
+                //按预览的宽与需要显示的宽比例调整预览的高度
+                float scalePreY = sw * preScale;// preHeight * (sWidth / preWidth);
+                //Y轴需要放大的比例
+                matrix.preScale(1.0f, scalePreY / sh);
+                float translateY = (sh - scalePreY) / 2;
+                matrix.postTranslate(0, translateY);
+//                LogUtils.i("transY %f , %f", scalePreY, translateY);
+            } else {//屏幕显示高宽尺寸比例较小的,即X轴偏移
+                float scalePreX = sh / preScale; //preWidth * (sHeight / preHeight);
+                //x轴需要放大的比例
+                matrix.preScale(scalePreX / sw, 1.0f);
+                float translateX = (sw - scalePreX) / 2;
+                matrix.postTranslate(translateX, 0);
+//                LogUtils.i("transX %f , %f", scalePreX, translateX);
+            }
+        }
+        return matrix;
+    }
 }
