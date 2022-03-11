@@ -38,7 +38,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
         Camera.FaceDetectionListener,
         Camera.ErrorCallback, Camera.OnZoomChangeListener {
 
-    private String TAG = "Camera1Helper";
+    private static String TAG = "Camera1Helper";
     private static Camera1Helper instance = null;
     private Context mContext;                       //上下文
     private Camera mCamera;                         //相机实例
@@ -65,6 +65,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
     private static final SparseArrayCompat<String> FLASH_MODES = new SparseArrayCompat<>();
     private byte[] buffer;                          //预览字节缓存
 
+
     //闪光灯模式
     static {
         FLASH_MODES.put(0, Camera.Parameters.FLASH_MODE_OFF);
@@ -81,6 +82,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
     private boolean isShutterSound = false;         //是否禁用快门声音
     private boolean isFaceDetect = false;           //是否开启人脸检测
     private boolean isZoom = false;                 //是否缩放
+    private int mZoom;                              //当前缩放具体值
 
     //AtomicBoolean在高并发的情况下只有一个线程能够访问这个属性值。
     private final AtomicBoolean isPictureCaptureInProgress = new AtomicBoolean(false);
@@ -603,6 +605,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
     public void handleZoom(float targetRatio) {
         if (mCamera == null) return;
         Camera.Parameters parameters = mCamera.getParameters();
+        //如果不支持变焦
         if (!parameters.isZoomSupported()) return;
         List<Integer> zoomRatios = parameters.getZoomRatios();
         if (zoomRatios == null || zoomRatios.isEmpty()) return;
@@ -611,6 +614,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
         parameters.setZoom(zoom);
         mCamera.setParameters(parameters);
     }
+
 
     /**
      * 二分查找最接近的
@@ -767,6 +771,7 @@ public class Camera1Helper implements Camera.PreviewCallback,
     //单例模式
     public static Camera1Helper getInstance(Context context, View previewDisplayView, CameraListener cameraListener) {
         if (instance == null) {
+            MyLogUtil.e(TAG,"instance == null");
             instance = new Camera1Helper(context, previewDisplayView, cameraListener);
         }
         return instance;

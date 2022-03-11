@@ -19,14 +19,22 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
         <Button
+            android:id="@+id/btn_phonePhoto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="跳转系统相册"
+            app:layout_constraintEnd_toEndOf="@+id/btn_phoneCamera"
+            app:layout_constraintStart_toStartOf="@+id/btn_phoneCamera"
+            app:layout_constraintTop_toBottomOf="@+id/btn_phoneCamera" />
+        <Button
             android:id="@+id/btn_camera_api"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAllCaps="false"
             android:text="向后兼容camera"
-            app:layout_constraintEnd_toEndOf="@+id/btn_phoneCamera"
-            app:layout_constraintStart_toStartOf="@+id/btn_phoneCamera"
-            app:layout_constraintTop_toBottomOf="@+id/btn_phoneCamera" />
+            app:layout_constraintEnd_toEndOf="@+id/btn_phonePhoto"
+            app:layout_constraintStart_toStartOf="@+id/btn_phonePhoto"
+            app:layout_constraintTop_toBottomOf="@+id/btn_phonePhoto" />
         <Button
             android:id="@+id/btn_camera1"
             android:layout_width="match_parent"

@@ -189,7 +189,8 @@ public class Camera1Activity extends AppCompatActivity implements View.OnClickLi
     }
 
     private void initData() {
-        camera1Helper = new Camera1Helper(this, autoFitTextureView, cameraListener);
+        camera1Helper = Camera1Helper.getInstance(this, autoFitTextureView, cameraListener);
+//        camera1Helper = new Camera1Helper(this, autoFitTextureView, cameraListener);
         camera1Helper.setSpecialSize(640,480);
         mnnFaceDetectorAdapter = new MNNFaceDetectorAdapter(this, mnnFaceDetectListener);
     }

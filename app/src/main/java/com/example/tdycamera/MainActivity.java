@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private String TAG = getClass().getSimpleName();
 
     private Button btnPhoneCamera;
+    private Button btnPhonePhoto;
     private Button btnCameraApi;
     private Button btnCamera1;
     private Button btnCamera2;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     }
     private void initView(){
         btnPhoneCamera = findViewById(R.id.btn_phoneCamera);
+        btnPhonePhoto = findViewById(R.id.btn_phonePhoto);
         btnCameraApi = findViewById(R.id.btn_camera_api);
         btnCamera1 = findViewById(R.id.btn_camera1);
         btnCamera2 = findViewById(R.id.btn_camera2);
@@ -70,6 +72,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     }
     private void initListener(){
         btnPhoneCamera.setOnClickListener(this);
+        btnPhonePhoto.setOnClickListener(this);
         btnCameraApi.setOnClickListener(this);
         btnCamera1.setOnClickListener(this);
         btnCamera2.setOnClickListener(this);
@@ -86,6 +89,13 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         switch (v.getId()){
             case R.id.btn_phoneCamera:
                 startActivity(new Intent(this, PhoneCameraActivity.class));
+                break;
+            case R.id.btn_phonePhoto:
+                Intent intent = new Intent();
+                //设置Intent.ACTION_PICK
+                intent.setAction(Intent.ACTION_PICK);
+                intent.setType("image/*");
+                startActivityForResult(intent,2);
                 break;
             case R.id.btn_camera_api:
                 startActivity(new Intent(this, CameraApiActivity.class));

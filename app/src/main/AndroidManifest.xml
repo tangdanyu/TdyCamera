@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.tdycamera" >
+    package="com.example.tdycamera">
     <!-- 请求相机功能 -->
     <uses-feature
         android:name="android.hardware.camera"
@@ -18,7 +18,10 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.TdyCamera" >
+        android:theme="@style/Theme.TdyCamera">
+        <activity
+            android:name=".player.MediaPlayerActivity"
+            android:exported="false" />
         <activity
             android:name=".mycamera.opencv.OpencvCamera2Activity"
             android:exported="true"
@@ -69,7 +72,7 @@
             android:exported="true" /> <!-- 设置全屏没有标题栏 -->
         <activity android:name=".demo.apicamera.CameraApiActivity" /> <!-- android:theme="@style/Theme.AppCompat.NoActionBar" -->
         <!-- /> -->
-        <activity android:name=".MainActivity" >
+        <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -81,7 +84,7 @@
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
-            android:grantUriPermissions="true" >
+            android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />

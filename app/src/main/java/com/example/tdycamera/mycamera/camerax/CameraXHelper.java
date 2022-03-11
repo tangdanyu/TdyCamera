@@ -4,6 +4,7 @@ package com.example.tdycamera.mycamera.camerax;
 import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
+import android.hardware.camera2.CameraCharacteristics;
 import android.media.ExifInterface;
 import android.media.Image;
 import android.os.Build;
@@ -18,7 +19,10 @@ import android.graphics.BitmapFactory;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.camera.camera2.interop.Camera2CameraInfo;
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
 import androidx.camera.core.Camera;
+import androidx.camera.core.CameraInfo;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
@@ -43,18 +47,24 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
+/**
+ *  预览+录制视频+拍照>=LIMITED
+ *  预览+录制视频+视频帧>=LEVEL_3
+ */
 
 public class CameraXHelper {
     private String TAG = "CameraXHelper";
     private Context context;
-    private ImageCapture imageCapture;
-    private ImageAnalysis imageAnalysis;
-    private VideoCapture mVideoCapture;
-
+    private ImageCapture imageCapture;//预览
+    private ImageAnalysis imageAnalysis;//分析
+    private VideoCapture mVideoCapture;//视频拍摄
+    private PreviewView previewView;//预览
     private CameraListener cameraListener;
-    private PreviewView previewView;
+
 
     private int mFacing = CameraSelector.LENS_FACING_FRONT;
     private byte[] y, u, v, i420, yv12, nv21, nv12;
@@ -70,6 +80,7 @@ public class CameraXHelper {
         init();
     }
 
+    @SuppressLint("RestrictedApi")
     private void init() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(context);
         cameraProviderFuture.addListener(() -> {
@@ -77,8 +88,12 @@ public class CameraXHelper {
                 // 摄像机提供商现在保证可用
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
+                boolean isLimited = isBackCameraLIMITEDDevice(cameraProvider);
+                boolean isLevel3 = isBackCameraLevel3Device(cameraProvider);
+                MyLogUtil.e(TAG,"isLimited = "+isLimited + " isLevel3 = "+isLevel3);
+
                 cameraProvider.unbindAll();
-                // 设置取景器用例以显示相机预览
+                // 设置取景器用例以显示相机预览 创建 Preview
                 Preview preview = new Preview.Builder()
                         .setTargetResolution(new Size(previewView.getWidth(), previewView.getHeight()))//需要跟imageAnalysis一致，否则会放大
                         .build();
@@ -87,27 +102,146 @@ public class CameraXHelper {
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                         .build();
 
-                //通过要求镜头朝向来选择相机
+                //通过要求镜头朝向来选择相机 指定所需的相机 LensFacing 选项。
                 CameraSelector cameraSelector = new CameraSelector.Builder()
                         .requireLensFacing(mFacing)
                         .build();
 
                 if (isRecordVideo) {
-                    //录制视频
                     mVideoCapture = new VideoCapture.Builder().build();
-                    // 将用例附加到具有相同生命周期所有者的相机
-                    Camera camera = cameraProvider.bindToLifecycle(
-                            (LifecycleOwner) context,
-                            cameraSelector,
-                            preview,
-                            imageCapture,
-                            mVideoCapture
-                    );
+                    if(isLimited){
+                        //录制视频+预览+拍照
+                        // 将用例附加到具有相同生命周期所有者的相机
+                        //  No supported surface combination is found for camera device - Id : 1.
+                        //  May be attempting to bind too many use cases. Existing surfaces:
+                        //  和 VideoCapture不能同时使用
+                        Camera camera = cameraProvider.bindToLifecycle(
+                                (LifecycleOwner) context,
+                                cameraSelector,
+                                preview,
+                                imageCapture,
+                                mVideoCapture
+                        );
+                    }
+                    if(isLevel3){
+                        ////录制视频+预览+拍照+分析视频帧
+                        imageAnalysis = new ImageAnalysis.Builder()
+                                .setTargetResolution(new Size(previewView.getWidth(), previewView.getHeight()))
+                                .setBackpressureStrategy(ImageAnalysis.STRATEGY_BLOCK_PRODUCER)//阻塞
+                                .build();
+                        imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context), new ImageAnalysis.Analyzer() {
+
+                            private long lastImageTime = System.currentTimeMillis();
+
+                            @Override
+                            public void analyze(@NonNull ImageProxy imageProxy) {
+
+                                //获取最新的一帧的Image
+                                @SuppressLint("UnsafeOptInUsageError")
+                                Image image = imageProxy.getImage();
+                                if (image.getFormat() == ImageFormat.YUV_420_888) {
+
+//                            MyLogUtil.e(TAG, "width" + imageProxy.getWidth());//1920
+//                            MyLogUtil.e(TAG, "height" + imageProxy.getHeight());//960
+//                            MyLogUtil.e(TAG, "format" + imageProxy.getFormat());//35
+//                            MyLogUtil.e(TAG, "timeStamp" + (imageProxy.getImageInfo().getTimestamp() / 1000000 - lastImageTime));//42
+//                            MyLogUtil.e(TAG, "getImageInfo" + imageProxy.getImageInfo().getRotationDegrees());//270
+
+                                    lastImageTime = image.getTimestamp() / 1000000;//33
+                                    if (nv21 == null) {
+                                        nv21 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
+                                        nv12 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
+                                        i420 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
+                                        yv12 = new byte[image.getWidth() * image.getHeight() * 3 / 2];
+                                    }
+                                    if (y == null) {
+                                        y = new byte[image.getPlanes()[0].getBuffer().remaining()];
+                                        u = new byte[image.getPlanes()[1].getBuffer().remaining()];
+                                        v = new byte[image.getPlanes()[2].getBuffer().remaining()];
+                                    }
+                                    // 从image里获取三个plane
+                                    Image.Plane[] planes = image.getPlanes();
+                                    for (int i = 0; i < planes.length; i++) {
+                                        ByteBuffer iBuffer = planes[i].getBuffer();
+                                        int iSize = iBuffer.remaining();
+//                                MyLogUtil.e(TAG, "pixelStride  " + planes[i].getPixelStride());
+//                                MyLogUtil.e(TAG, "rowStride   " + planes[i].getRowStride());
+//                                MyLogUtil.e(TAG, "buffer Size  " + iSize);
+//                                MyLogUtil.e(TAG, "Finished reading data from plane  " + i);
+                                    }
+//                            pixelStride  1
+//                            rowStride 1920
+//                            buffer Size 1843200
+//                            Finished reading data from plane 0
+//                            pixelStride 2
+//                            rowStride 1920
+//                            buffer Size 921599
+//                            Finished reading data from plane 1
+//                            pixelStride 2
+//                            rowStride 1920
+//                            buffer Size 921599
+//                            Finished reading data from plane 2
+
+
+                                    int width = image.getWidth();
+                                    int height = image.getHeight();
+                                    planes[0].getBuffer().get(y);
+                                    planes[1].getBuffer().get(u);
+                                    planes[2].getBuffer().get(v);
+
+                                    if (cameraListener != null) {
+                                        cameraListener.onPreview(y, u, v, new Size(width, height), planes[0].getRowStride());
+                                    }
+                                    int pixelStride = planes[1].getPixelStride();
+                                    if (pixelStride == 1) {//420p,i420/yv12
+                                        if (format == ImageFormat.YV12) {
+                                            //i420
+                                            System.arraycopy(y, 0, i420, 0, y.length);
+                                            System.arraycopy(u, 0, i420, y.length, u.length);
+                                            System.arraycopy(v, 0, i420, y.length + u.length, v.length);
+                                            YUVUtil.convertI420ToNV21(i420, nv21, width, height);
+                                        } else {
+                                            //yv12
+                                            System.arraycopy(y, 0, yv12, 0, y.length);
+                                            System.arraycopy(v, 0, yv12, y.length, v.length);
+                                            System.arraycopy(u, 0, yv12, y.length + v.length, u.length);
+                                            YUVUtil.convertYV12ToI420(yv12, i420, width, height);
+                                            YUVUtil.convertI420ToNV21(i420, nv21, width, height);
+                                        }
+
+                                    } else if (pixelStride == 2) {//420sp,nv21/nv12
+                                        //nv21
+                                        if (format == ImageFormat.NV21) {
+                                            System.arraycopy(y, 0, nv21, 0, y.length);
+                                            System.arraycopy(v, 0, nv21, y.length, v.length);
+                                        } else {
+                                            //nv12
+                                            System.arraycopy(y, 0, nv12, 0, y.length);
+                                            System.arraycopy(u, 0, nv12, y.length, u.length);
+                                            YUVUtil.convertNV12ToI420(nv12, i420, width, height);
+                                            YUVUtil.convertI420ToNV21(i420, nv21, width, height);
+                                        }
+                                    }
+                                    if (cameraListener != null) {
+                                        cameraListener.onCameraPreview(nv21, width, height, imageProxy.getImageInfo().getRotationDegrees());
+                                    }
+                                }
+
+                                image.close(); // 这里一定要close，不然预览会卡死,否则不会收到新的Image回调。
+                                imageProxy.close();
+                            }
+                        });
+                        Camera camera = cameraProvider.bindToLifecycle(
+                                (LifecycleOwner) context,
+                                cameraSelector,
+                                preview,
+                                imageCapture,
+                                mVideoCapture,
+                                imageAnalysis
+                        );
+                    }
                 } else {
                     //分析视频帧
-                    //  No supported surface combination is found for camera device - Id : 1.
-                    //  May be attempting to bind too many use cases. Existing surfaces:
-                    //  和 VideoCapture不能同时使用
                     imageAnalysis = new ImageAnalysis.Builder()
                             .setTargetResolution(new Size(previewView.getWidth(), previewView.getHeight()))
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_BLOCK_PRODUCER)//阻塞
@@ -210,10 +344,11 @@ public class CameraXHelper {
                                 }
                             }
 
-                            image.close(); // 这里一定要close，不然预览会卡死,否则不会收到新的Image回调。
-                            imageProxy.close();
+//                            image.close();
+                            imageProxy.close();// 这里一定要close，不然预览会卡死,否则不会收到新的Image回调。
                         }
                     });
+                    //将所选相机和任意用例绑定到生命周期。
                     Camera camera = cameraProvider.bindToLifecycle(
                             (LifecycleOwner) context,
                             cameraSelector,
@@ -235,6 +370,39 @@ public class CameraXHelper {
         }, ContextCompat.getMainExecutor(context));
     }
 
+    //检查默认的后置摄像头是否是 LEVEL_3 设备
+    @androidx.annotation.OptIn(markerClass = ExperimentalCamera2Interop.class)
+    private boolean isBackCameraLevel3Device(ProcessCameraProvider cameraProvider) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            @SuppressLint("RestrictedApi")
+            List filteredCameraInfos = CameraSelector.DEFAULT_BACK_CAMERA
+                    .filter(cameraProvider.getAvailableCameraInfos());
+            if (!filteredCameraInfos.isEmpty()) {
+                return Objects.equals(
+                        Camera2CameraInfo.from((CameraInfo) filteredCameraInfos.get(0)).getCameraCharacteristic(
+                                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL),
+                        CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3);
+            }
+        }
+        return false;
+    }
+
+    //检查默认的后置摄像头是否是 LIMITED 设备
+    @androidx.annotation.OptIn(markerClass = ExperimentalCamera2Interop.class)
+    private boolean isBackCameraLIMITEDDevice(ProcessCameraProvider cameraProvider) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            @SuppressLint("RestrictedApi")
+            List filteredCameraInfos = CameraSelector.DEFAULT_BACK_CAMERA
+                    .filter(cameraProvider.getAvailableCameraInfos());
+            if (!filteredCameraInfos.isEmpty()) {
+                return Objects.equals(
+                        Camera2CameraInfo.from((CameraInfo) filteredCameraInfos.get(0)).getCameraCharacteristic(
+                                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL),
+                        CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED);
+            }
+        }
+        return false;
+    }
     //拍照保存到文件
     private void cameraXCaptureToFile() {
         String path = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES).getAbsolutePath() + File.separator + System.currentTimeMillis() + ".jpg";
